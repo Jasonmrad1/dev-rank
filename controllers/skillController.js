@@ -1,44 +1,51 @@
+const skillService = require("../services/skillService");
+
 // Create a new skill
 exports.createSkill = async (req, res) => {
   try {
-    res.status(201).json({ message: "Skill creation endpoint is under development." });
+    const skill = await skillService.createSkill(req.body);
+    res.status(201).json({ message: "Skill created successfully.", skill });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status || 500).json({ error: err.message, skill: err.skill });
   }
 };
 
 // Get all skills
 exports.getAllSkills = async (req, res) => {
   try {
-    res.status(200).json({ message: "Skill listing endpoint is under development." });
+    const skills = await skillService.getAllSkills(req.query);
+    res.status(200).json({ skills });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status || 500).json({ error: err.message });
   }
 };
 
 // Get skill by ID
 exports.getSkill = async (req, res) => {
   try {
-    res.status(200).json({ message: "Skill retrieval endpoint is under development." });
+    const skill = await skillService.getSkill(req.params.id);
+    res.status(200).json({ skill });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status || 500).json({ error: err.message });
   }
 };
 
 // Update skill
 exports.updateSkill = async (req, res) => {
   try {
-    res.status(200).json({ message: "Skill update endpoint is under development." });
+    const skill = await skillService.updateSkill(req.params.id, req.body);
+    res.status(200).json({ message: "Skill updated successfully.", skill });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status || 500).json({ error: err.message });
   }
 };
 
 // Delete skill
 exports.deleteSkill = async (req, res) => {
   try {
-    res.status(200).json({ message: "Skill deletion endpoint is under development." });
+    await skillService.deleteSkill(req.params.id);
+    res.status(200).json({ message: "Skill deleted successfully." });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status || 500).json({ error: err.message });
   }
 };

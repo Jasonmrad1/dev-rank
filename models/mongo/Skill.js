@@ -7,6 +7,7 @@ const skillSchema = new mongoose.Schema({
     enum: ["frontend", "backend", "devops", "database", "mobile", "other"],
     required: true,
   },
+  isPreset: { type: Boolean, default: false },
   users: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 });
 

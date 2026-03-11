@@ -21,9 +21,9 @@ exports.getAllUsers = async (req, res) => {
 };
 
 // Get user profile
-exports.getUserProfile = async (req, res) => {
+exports.getUser = async (req, res) => {
   try {
-    const user = await userService.getUserProfile(req.params.id);
+    const user = await userService.getUser(req.params.id);
     res.status(200).json({ user });
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });
@@ -53,17 +53,27 @@ exports.deleteUser = async (req, res) => {
 // Add skills to user
 exports.addSkill = async (req, res) => {
   try {
-    const { user, count } = await userService.addSkills(req.params.id, req.body.skillIds);
+    const { user, count } = await userService.addSkills(req.params.id, req.body.skills);
     res.status(200).json({ message: `${count} skill(s) assigned successfully.`, user });
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });
   }
 };
 
-// Remove skills from user
+// Remove a single skill from user (via URL param)
 exports.removeSkill = async (req, res) => {
   try {
-    const { user, count } = await userService.removeSkills(req.params.id, req.params.skillId, req.body.skillIds);
+    const { user, count } = await userService.removeSkill(req.params.id, req.params.skill);
+    res.status(200).json({ message: `${count} skill(s) removed successfully.`, user });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+};
+
+// Remove multiple skills from user (via body)
+exports.removeSkills = async (req, res) => {
+  try {
+    const { user, count } = await userService.removeSkills(req.params.id, req.body.skills);
     res.status(200).json({ message: `${count} skill(s) removed successfully.`, user });
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });

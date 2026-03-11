@@ -30,6 +30,16 @@ exports.getSkill = async (req, res) => {
   }
 };
 
+// Get skill by name
+exports.getSkillByName = async (req, res) => {
+  try {
+    const skill = await skillService.getSkillByName(req.params.name);
+    res.status(200).json({ skill });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+};
+
 // Update skill
 exports.updateSkill = async (req, res) => {
   try {
@@ -44,6 +54,26 @@ exports.updateSkill = async (req, res) => {
 exports.deleteSkill = async (req, res) => {
   try {
     await skillService.deleteSkill(req.params.id);
+    res.status(200).json({ message: "Skill deleted successfully." });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+};
+
+// Update skill by name
+exports.updateSkillByName = async (req, res) => {
+  try {
+    const skill = await skillService.updateSkillByName(req.params.name, req.body);
+    res.status(200).json({ message: "Skill updated successfully.", skill });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+};
+
+// Delete skill by name
+exports.deleteSkillByName = async (req, res) => {
+  try {
+    await skillService.deleteSkillByName(req.params.name);
     res.status(200).json({ message: "Skill deleted successfully." });
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });

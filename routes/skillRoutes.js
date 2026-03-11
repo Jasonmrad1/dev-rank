@@ -8,6 +8,15 @@ router.post("/", skillController.createSkill);
 // GET /api/skills - Get all skills
 router.get("/", skillController.getAllSkills);
 
+// GET /api/skills/name/:name - Get skill by name
+router.get("/name/:name", skillController.getSkillByName);
+
+// PUT /api/skills/name/:name - Update skill by name
+router.put("/name/:name", skillController.updateSkillByName);
+
+// DELETE /api/skills/name/:name - Delete skill by name
+router.delete("/name/:name", skillController.deleteSkillByName);
+
 // GET /api/skills/:id - Get skill by ID
 router.get("/:id", skillController.getSkill);
 

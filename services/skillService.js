@@ -13,7 +13,7 @@ exports.createSkill = async ({ name, category, isPreset }) => {
 
 exports.getAllSkills = async ({ category, preset }) => {
   const filter = {};
-  if (category) filter.category = category;
+  if (category) filter.category = { $in: Array.isArray(category) ? category : [category] };
   if (preset !== undefined) filter.isPreset = preset === "true";
   return await Skill.find(filter).sort({ isPreset: -1, name: 1 });
 };
@@ -28,11 +28,21 @@ exports.getSkill = async (id) => {
   return skill;
 };
 
+exports.getSkillByName = async (name) => {
+  const skill = await Skill.findOne({ name: { $regex: `^${name}$`, $options: "i" } }).populate("users", "name email avatarUrl");
+  if (!skill) {
+    const err = new Error("Skill not found.");
+    err.status = 404;
+    throw err;
+  }
+  return skill;
+};
+
 exports.updateSkill = async (id, { name, category, isPreset }) => {
   const skill = await Skill.findByIdAndUpdate(
     id,
     { name, category, isPreset },
-    { new: true, runValidators: true }
+    { returnDocument: 'after', runValidators: true }
   );
   if (!skill) {
     const err = new Error("Skill not found.");
@@ -44,6 +54,29 @@ exports.updateSkill = async (id, { name, category, isPreset }) => {
 
 exports.deleteSkill = async (id) => {
   const skill = await Skill.findByIdAndDelete(id);
+  if (!skill) {
+    const err = new Error("Skill not found.");
+    err.status = 404;
+    throw err;
+  }
+};
+
+exports.updateSkillByName = async (name, { name: newName, category, isPreset }) => {
+  const skill = await Skill.findOneAndUpdate(
+    { name: { $regex: `^${name}$`, $options: "i" } },
+    { name: newName, category, isPreset },
+    { returnDocument: 'after', runValidators: true }
+  );
+  if (!skill) {
+    const err = new Error("Skill not found.");
+    err.status = 404;
+    throw err;
+  }
+  return skill;
+};
+
+exports.deleteSkillByName = async (name) => {
+  const skill = await Skill.findOneAndDelete({ name: { $regex: `^${name}$`, $options: "i" } });
   if (!skill) {
     const err = new Error("Skill not found.");
     err.status = 404;

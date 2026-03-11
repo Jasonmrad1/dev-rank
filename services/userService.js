@@ -17,7 +17,7 @@ exports.getAllUsers = async () => {
   return await User.find().populate("skills");
 };
 
-exports.getUserProfile = async (id) => {
+exports.getUser = async (id) => {
   const user = await User.findById(id).populate("skills");
   if (!user) {
     const err = new Error("User not found.");
@@ -31,7 +31,7 @@ exports.updateUser = async (id, { name, bio, githubUrl, avatarUrl }) => {
   const user = await User.findByIdAndUpdate(
     id,
     { name, bio, githubUrl, avatarUrl },
-    { new: true, runValidators: true }
+    { returnDocument: 'after', runValidators: true }
   ).populate("skills");
   if (!user) {
     const err = new Error("User not found.");
@@ -50,9 +50,23 @@ exports.deleteUser = async (id) => {
   }
 };
 
-exports.addSkills = async (userId, skillIds) => {
-  const ids = Array.isArray(skillIds) ? skillIds : [skillIds];
+const resolveSkillIds = async (inputs) => {
+  const arr = Array.isArray(inputs) ? inputs : [inputs];
+  const skills = await Skill.find({
+    $or: [
+      { _id: { $in: arr.filter((v) => v.match && v.match(/^[a-f\d]{24}$/i)) } },
+      { name: { $in: arr.filter((v) => !v.match || !v.match(/^[a-f\d]{24}$/i)) } },
+    ],
+  });
+  if (skills.length !== arr.length) {
+    const err = new Error("One or more skills were not found.");
+    err.status = 404;
+    throw err;
+  }
+  return skills.map((s) => s._id);
+};
 
+exports.addSkills = async (userId, skillInputs) => {
   const user = await User.findById(userId);
   if (!user) {
     const err = new Error("User not found.");
@@ -60,12 +74,7 @@ exports.addSkills = async (userId, skillIds) => {
     throw err;
   }
 
-  const skills = await Skill.find({ _id: { $in: ids } });
-  if (skills.length !== ids.length) {
-    const err = new Error("One or more skills were not found.");
-    err.status = 404;
-    throw err;
-  }
+  const ids = await resolveSkillIds(skillInputs);
 
   const newIds = ids.filter((id) => !user.skills.map((s) => s.toString()).includes(id.toString()));
   if (newIds.length === 0) {
@@ -75,17 +84,13 @@ exports.addSkills = async (userId, skillIds) => {
   }
 
   user.skills.push(...newIds);
-  await user.save();
+  await user.save().pop;
   await Skill.updateMany({ _id: { $in: newIds } }, { $addToSet: { users: user._id } });
-
+  await user.populate("skills");
   return { user, count: newIds.length };
 };
 
-exports.removeSkills = async (userId, skillId, bodyIds) => {
-  const ids = bodyIds
-    ? Array.isArray(bodyIds) ? bodyIds : [bodyIds]
-    : [skillId];
-
+exports.removeSkill = async (userId, skillId) => {
   const user = await User.findById(userId);
   if (!user) {
     const err = new Error("User not found.");
@@ -93,7 +98,28 @@ exports.removeSkills = async (userId, skillId, bodyIds) => {
     throw err;
   }
 
-  user.skills = user.skills.filter((s) => !ids.map(String).includes(s.toString()));
+  const ids = await resolveSkillIds([skillId]);
+  const idStrings = ids.map(String);
+
+  user.skills = user.skills.filter((s) => !idStrings.includes(s.toString()));
+  await user.save();
+  await Skill.updateMany({ _id: { $in: ids } }, { $pull: { users: user._id } });
+
+  return { user, count: ids.length };
+};
+
+exports.removeSkills = async (userId, skills) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    const err = new Error("User not found.");
+    err.status = 404;
+    throw err;
+  }
+
+  const ids = await resolveSkillIds(Array.isArray(skills) ? skills : [skills]);
+  const idStrings = ids.map(String);
+
+  user.skills = user.skills.filter((s) => !idStrings.includes(s.toString()));
   await user.save();
   await Skill.updateMany({ _id: { $in: ids } }, { $pull: { users: user._id } });
 

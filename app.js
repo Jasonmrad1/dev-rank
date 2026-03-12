@@ -11,7 +11,7 @@ const certificationRoutes = require("./routes/certificationRoutes");
 const activityLogRoutes = require("./routes/activityLogRoutes");
 
 const app = express();
-
+//middleware
 app.use(express.json());
 
 // Mount routes

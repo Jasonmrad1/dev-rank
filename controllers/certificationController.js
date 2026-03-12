@@ -1,35 +1,41 @@
+const certificationService = require("../services/certificationService");
+
 // Apply for certification
 exports.apply = async (req, res) => {
   try {
-    res.status(201).json({ message: "Certification application endpoint is under development." });
+    const request = await certificationService.apply(req.body);
+    res.status(201).json(request);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status || 500).json({ error: err.message });
   }
 };
 
 // Get all certification requests
 exports.getAllRequests = async (req, res) => {
   try {
-    res.status(200).json({ message: "Certification request listing endpoint is under development." });
+    const requests = await certificationService.getAllRequests();
+    res.status(200).json(requests);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status || 500).json({ error: err.message });
   }
 };
 
 // Approve certification
 exports.approve = async (req, res) => {
   try {
-    res.status(200).json({ message: "Certification approval endpoint is under development." });
+    const request = await certificationService.approve(req.params.id, req.body.adminNotes);
+    res.status(200).json(request);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status || 500).json({ error: err.message });
   }
 };
 
 // Reject certification
 exports.reject = async (req, res) => {
   try {
-    res.status(200).json({ message: "Certification rejection endpoint is under development." });
+    const request = await certificationService.reject(req.params.id, req.body.adminNotes);
+    res.status(200).json(request);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.status || 500).json({ error: err.message });
   }
 };

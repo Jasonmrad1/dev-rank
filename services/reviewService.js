@@ -2,6 +2,14 @@ const Review = require("../models/mongo/Review");
 const Project = require("../models/mongo/Project");
 const User = require("../models/mongo/User");
 
+
+const calculateAverage = (reviews, field) => {
+    if (reviews.length === 0) return 0;
+
+    const total = reviews.reduce((sum, review) => sum + review[field], 0);
+    return Number((total / reviews.length).toFixed(2));
+};
+
 const recalculateProjectAggregates = async (projectId) => {
     const reviews = await Review.find({
         project: projectId,
@@ -10,33 +18,18 @@ const recalculateProjectAggregates = async (projectId) => {
 
     const totalReviews = reviews.length;
 
-    let aggregateRating = 0;
-    let aggregateCodeQuality = 0;
-    let aggregateCreativity = 0;
-    let aggregateCleanCode = 0;
-    let hireVotes = 0;
+    const aggregateRating = calculateAverage(reviews, "overallRating");
+    const aggregateCodeQuality = calculateAverage(reviews, "codeQualityScore");
+    const aggregateCreativity = calculateAverage(reviews, "creativityScore");
+    const aggregateCleanCode = calculateAverage(reviews, "cleanCodeScore");
+    const hireVotes = reviews.filter((r) => r.wouldHire === true).length;
 
-    if (totalReviews > 0) {
-        aggregateRating =
-            reviews.reduce((sum, r) => sum + r.overallRating, 0) / totalReviews;
-
-        aggregateCodeQuality =
-            reviews.reduce((sum, r) => sum + r.codeQualityScore, 0) / totalReviews;
-
-        aggregateCreativity =
-            reviews.reduce((sum, r) => sum + r.creativityScore, 0) / totalReviews;
-
-        aggregateCleanCode =
-            reviews.reduce((sum, r) => sum + r.cleanCodeScore, 0) / totalReviews;
-
-        hireVotes = reviews.filter((r) => r.wouldHire === true).length;
-    }
 
     await Project.findByIdAndUpdate(projectId, {
-        aggregateRating: Number(aggregateRating.toFixed(2)),
-        aggregateCodeQuality: Number(aggregateCodeQuality.toFixed(2)),
-        aggregateCreativity: Number(aggregateCreativity.toFixed(2)),
-        aggregateCleanCode: Number(aggregateCleanCode.toFixed(2)),
+        aggregateRating,
+        aggregateCodeQuality,
+        aggregateCreativity,
+        aggregateCleanCode,
         totalReviews,
         hireVotes,
         status: totalReviews > 0 ? "reviewed" : "seeking-review",
@@ -134,8 +127,6 @@ exports.updateReview = async (id, data) => {
         },
         { new: true, runValidators: true }
     )
-        .populate("project", "title status")
-        .populate("reviewer", "name email role githubUrl");
 
     if (!review) {
         const err = new Error("Review not found.");
@@ -145,7 +136,11 @@ exports.updateReview = async (id, data) => {
 
     await recalculateProjectAggregates(review.project._id);
 
-    return review;
+    return await Review.findById(review._id)
+        .populate("project", "title status")
+        .populate("reviewer", "name email role githubUrl");
+
+
 };
 
 exports.deleteReview = async (id) => {

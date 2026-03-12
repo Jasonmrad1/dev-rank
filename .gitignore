@@ -1,3 +1,4 @@
 node_modules/
 .env
 devrank.sqlite
+package-lock.json

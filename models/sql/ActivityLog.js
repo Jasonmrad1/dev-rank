@@ -7,7 +7,7 @@ const ActivityLog = sequelize.define("ActivityLog", {
     primaryKey: true,
     autoIncrement: true,
   },
-  userId: {
+  userEmail: {
     type: DataTypes.STRING,
     allowNull: true,
   },

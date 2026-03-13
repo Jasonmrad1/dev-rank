@@ -7,26 +7,25 @@ const ActivityLog = sequelize.define("ActivityLog", {
     primaryKey: true,
     autoIncrement: true,
   },
-  userEmail: {
+  userId: {
     type: DataTypes.STRING,
-  },
-  userRole: {
-    type: DataTypes.STRING,
+    allowNull: true,
   },
   action: {
     type: DataTypes.STRING,
+    allowNull: false,
   },
-  entityType: {
+  entity: {
     type: DataTypes.STRING,
+    allowNull: false,
   },
   entityId: {
     type: DataTypes.STRING,
+    allowNull: true,
   },
   metadata: {
-    type: DataTypes.TEXT,
-  },
-  ipAddress: {
-    type: DataTypes.STRING,
+    type: DataTypes.JSON,
+    allowNull: true,
   },
   timestamp: {
     type: DataTypes.DATE,

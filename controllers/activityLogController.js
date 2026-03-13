@@ -1,7 +1,9 @@
+const activityLogService = require("../services/activityLogService");
 // Get all activity logs
 exports.getAllLogs = async (req, res) => {
   try {
-    res.status(200).json({ message: "Activity log listing endpoint is under development." });
+    const logs = await activityLogService.getAllLogs(req.query);
+    res.status(200).json(logs);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -10,7 +12,8 @@ exports.getAllLogs = async (req, res) => {
 // Get logs by user email
 exports.getLogsByUser = async (req, res) => {
   try {
-    res.status(200).json({ message: "Activity log retrieval by user endpoint is under development." });
+    const logs = await activityLogService.getLogsByUser(req.params.userEmail);
+    res.status(200).json(logs);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -19,7 +22,8 @@ exports.getLogsByUser = async (req, res) => {
 // Delete all logs
 exports.deleteLogs = async (req, res) => {
   try {
-    res.status(200).json({ message: "Activity log deletion endpoint is under development." });
+    const result = await activityLogService.clearLogs();
+    res.status(200).json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

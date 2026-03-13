@@ -12,7 +12,7 @@ exports.getAllLogs = async (req, res) => {
 // Get logs by user email
 exports.getLogsByUser = async (req, res) => {
   try {
-    const logs = await activityLogService.getLogsByUser(req.params.userEmail);
+    const logs = await activityLogService.getLogsByUser(req.params.email);
     res.status(200).json(logs);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -22,7 +22,7 @@ exports.getLogsByUser = async (req, res) => {
 // Delete all logs
 exports.deleteLogs = async (req, res) => {
   try {
-    const result = await activityLogService.clearLogs();
+    const result = await activityLogService.deleteLogs();
     res.status(200).json(result);
   } catch (err) {
     res.status(500).json({ error: err.message });

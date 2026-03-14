@@ -1,22 +1,19 @@
 const CertificationRequest = require("../models/mongo/CertificationRequest");
 const User = require("../models/mongo/User");
-const activityLogService = require("./activityLogService");
+const certificationLogger = require("../loggers/certificationLogger");
+const AppError = require("../utils/AppError");
 
 exports.apply = async (data) => {
   const { user, cvUrl, experience, motivation, techExpertise } = data;
 
   const existingUser = await User.findById(user);
   if (!existingUser) {
-    const err = new Error("User not found.");
-    err.status = 404;
-    throw err;
+    throw new AppError("User not found.", 404);
   }
 
   const existing = await CertificationRequest.findOne({ user, status: "pending" });
   if (existing) {
-    const err = new Error("User already has a pending certification request.");
-    err.status = 409;
-    throw err;
+    throw new AppError("User already has a pending certification request.", 409);
   }
 
   const request = await CertificationRequest.create({
@@ -29,16 +26,7 @@ exports.apply = async (data) => {
 
   await User.findByIdAndUpdate(user, { reviewerStatus: "pending" , isVerifiedReviewer: false});
 
-  //implement activityLog
-  await activityLogService.createLog({
-    userEmail: existingUser.email,
-    action: "APPLY_CERTIFICATION",
-    entity: "CertificationRequest",
-    entityId: request._id.toString(),
-    metadata: {
-      techExpertise,
-    },
-  });
+  certificationLogger.logCertificationApplied(existingUser._id.toString(), request._id.toString(), techExpertise);
 
   return request;
 };
@@ -47,33 +35,16 @@ exports.getAllRequests = async () => {
   return await CertificationRequest.find().populate("user", "name email role reviewerStatus isVerifiedReviewer");
 };
 
-//Only admin can approve
-exports.approve = async (id, adminNotes, adminUserId) => {
-  const adminUser = await User.findById(adminUserId);
-  if (!adminUser) {
-    const err = new Error("Admin user not found!");
-    err.status = 404;
-    throw err;
-  }
-
-  if (adminUser.role !== "admin") {
-    const err = new Error("Only admins can approve certification requests.");
-    err.status = 403;
-    throw err;
-  }
-
+//Approve certification request
+exports.approve = async (id, adminNotes) => {
   const request = await CertificationRequest.findById(id);
   if (!request) {
-    const err = new Error("Certification request not found.");
-    err.status = 404;
-    throw err;
+    throw new AppError("Certification request not found.", 404);
   }
 
   //Only pending requests
   if (request.status !== "pending") {
-    const err = new Error("Only pending certification requests can be approved.");
-    err.status = 409;
-    throw err;
+    throw new AppError("Only pending certification requests can be approved.", 409);
   }
 
   request.status = "approved";
@@ -88,48 +59,21 @@ exports.approve = async (id, adminNotes, adminUserId) => {
   });
 
   //activity log
-  await activityLogService.createLog({
-    userEmail: adminUser.email,
-    action: "APPROVE_CERTIFICATION",
-    entity: "CertificationRequest",
-    entityId: request._id.toString(),
-    metadata: {
-      adminNotes,
-    },
-  });
-
+  certificationLogger.logCertificationApproved("system", request._id.toString(), adminNotes);
 
   return request;
 };
 
-//Only admin can reject
-exports.reject = async (id, adminNotes, adminUserId) => {
-
-  const adminUser = await User.findById(adminUserId);
-  if (!adminUser) {
-    const err = new Error("Admin user not found.");
-    err.status = 404;
-    throw err;
-  }
-
-  if (adminUser.role !== "admin") {
-    const err = new Error("Only admins can reject certification requests.");
-    err.status = 403;
-    throw err;
-  }
-
+//Reject certification request
+exports.reject = async (id, adminNotes) => {
   const request = await CertificationRequest.findById(id);
   if (!request) {
-    const err = new Error("Certification request not found.");
-    err.status = 404;
-    throw err;
+    throw new AppError("Certification request not found.", 404);
   }
 
   //Request must be pending
   if (request.status !== "pending") {
-    const err = new Error("Only pending certification requests can be rejected.");
-    err.status = 409;
-    throw err;
+    throw new AppError("Only pending certification requests can be rejected.", 409);
   }
 
   request.status = "rejected";
@@ -137,21 +81,9 @@ exports.reject = async (id, adminNotes, adminUserId) => {
   request.reviewedAt = new Date();
   await request.save();
 
-  await User.findByIdAndUpdate(request.user, { reviewerStatus: "rejected" , isVerifiedReviewer:false});
+  await User.findByIdAndUpdate(request.user, { reviewerStatus: "rejected", isVerifiedReviewer: false });
 
-  await activityLogService.createLog({
-    userEmail: adminUser.email,
-    action: "REJECT_CERTIFICATION",
-    entity: "CertificationRequest",
-    entityId: request._id.toString(),
-    metadata: {
-      adminNotes,
-    },
-  });
+  certificationLogger.logCertificationRejected("system", request._id.toString(), adminNotes);
 
   return request;
 };
-
-
-//Made admin only can approve or reject
-//Req must be pending

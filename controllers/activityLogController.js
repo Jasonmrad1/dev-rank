@@ -1,43 +1,33 @@
 const activityLogService = require("../services/activityLogService");
-// Get all activity logs
-exports.getAllLogs = async (req, res) => {
-  try {
-    const logs = await activityLogService.getAllLogs(req.query);
-    res.status(200).json(logs);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+const asyncHandler = require("../middleware/asyncHandler");
 
-// Get logs by user email
-exports.getLogsByUser = async (req, res) => {
-  try {
-    const logs = await activityLogService.getLogsByUser(req.params.email);
-    res.status(200).json(logs);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+// Get all activity logs
+exports.getAllLogs = asyncHandler(async (req, res) => {
+  const logs = await activityLogService.getAllLogs(req.query);
+  res.status(200).json(logs);
+});
+
+// Get logs by user id
+exports.getLogsByUser = asyncHandler(async (req, res) => {
+  const logs = await activityLogService.getLogsByUser(req.params.userId);
+  res.status(200).json(logs);
+});
+
+// Get logs by entity and optional entity id
+exports.getLogsByEntity = asyncHandler(async (req, res) => {
+  const logs = await activityLogService.getLogsByEntity(req.params.entity, req.params.entityId);
+  res.status(200).json(logs);
+});
 
 // Delete all logs
-exports.deleteLogs = async (req, res) => {
-  try {
-    const result = await activityLogService.deleteLogs();
-    res.status(200).json(result);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+exports.deleteLogs = asyncHandler(async (req, res) => {
+  const result = await activityLogService.deleteLogs();
+  res.status(200).json(result);
+});
 
 //Delete old logs
+exports.deleteOldLogs = asyncHandler(async (req, res) => {
+  const result = await activityLogService.deleteOldLogs(req.query.beforeDate);
+  res.status(200).json(result);
+});
 
-exports.deleteOldLogs = async (req, res) => {
-  try {
-    const result = await activityLogService.deleteOldLogs(req.query.beforeDate);
-    res.status(200).json(result);
-  } catch (err) {
-    res.status(err.status || 500).json({ error: err.message });
-  }
-};
-
-//Added old logs filter and delete

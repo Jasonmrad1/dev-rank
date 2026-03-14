@@ -1,9 +1,10 @@
 const Project = require("../models/mongo/Project");
 const Review = require("../models/mongo/Review");
 const User = require("../models/mongo/User");
-const activityLogService = require("./activityLogService");
+const projectLogger = require("../loggers/projectLogger");
+const AppError = require("../utils/AppError");
 
-exports.recalculateUserProfileScore = async (userId) => {
+const recalculateUserProfileScore = async (userId) => {
     const ownedProjects = await Project.find({ owner: userId });
 
     if (ownedProjects.length === 0) {
@@ -29,14 +30,14 @@ exports.recalculateUserProfileScore = async (userId) => {
     });
 };
 
+exports.recalculateUserProfileScore = recalculateUserProfileScore;
+
 exports.createProject = async (data) => {
     const { owner, title, description, repoUrl, liveUrl, techStack, status } = data;
 
     const ownerUser = await User.findById(owner);
     if (!ownerUser) {
-        const err = new Error("Owner user not found.");
-        err.status = 404;
-        throw err;
+        throw new AppError("Owner user not found.", 404);
     }
 
     const project = await Project.create({
@@ -50,16 +51,12 @@ exports.createProject = async (data) => {
     });
 
     //implement activityLog
-    await activityLogService.createLog({
-        userEmail: ownerUser.email,
-        action: "CREATE_PROJECT",
-        entity: "Project",
-        entityId: project._id.toString(),
-        metadata: {
-            title: project.title,
-            status: project.status,
-        },
-    });
+    projectLogger.logProjectCreated(
+      ownerUser._id.toString(),
+      project._id.toString(),
+      project.title,
+      project.status
+    );
 
     return await project.populate("owner", "name email role githubUrl");
 };
@@ -94,9 +91,7 @@ exports.getProject = async (id) => {
     );
 
     if (!project) {
-        const err = new Error("Project not found.");
-        err.status = 404;
-        throw err;
+        throw new AppError("Project not found.", 404);
     }
 
     return project;
@@ -117,62 +112,49 @@ exports.updateProject = async (id, data) => {
     ).populate("owner", "name email role githubUrl");
 
     if (!project) {
-        const err = new Error("Project not found.");
-        err.status = 404;
-        throw err;
+        throw new AppError("Project not found.", 404);
     }
 
-    await activityLogService.createLog({
-        userEmail: project.owner.email,
-        action: "UPDATE_PROJECT",
-        entity: "Project",
-        entityId: project._id.toString(),
-        metadata: {
-            title: project.title,
-            status: project.status,
-        },
-    });
+    projectLogger.logProjectUpdated(
+      project.owner._id.toString(),
+      project._id.toString(),
+      project.title,
+      project.status
+    );
 
     return project;
 };
 
+
+// Helper function to clean up project data on deletion
+async function cleanupProjectData(project) {
+    // Delete the project
+    await Project.findByIdAndDelete(project._id);
+    // Delete related reviews
+    await Review.deleteMany({ project: project._id });
+    // Recalculate owner's profile score directly
+    await recalculateUserProfileScore(project.owner._id);
+    // Log the deletion
+    projectLogger.logProjectDeleted(
+      project.owner._id.toString(),
+      project._id.toString(),
+      project.title
+    );
+}
+
 exports.deleteProject = async (id) => {
     const project = await Project.findById(id).populate("owner", "email");
-
     if (!project) {
-        const err = new Error("Project not found.");
-        err.status = 404;
-        throw err;
+        throw new AppError("Project not found.", 404);
     }
-
-    await Project.findByIdAndDelete(id);
-    // delete also related reviews
-    await Review.deleteMany({ project: id });
-
-    await exports.recalculateUserProfileScore(project.owner._id);
-
-
-    //log for delete
-    await activityLogService.createLog({
-        userEmail: project.owner.email,
-        action: "DELETE_PROJECT",
-        entity: "Project",
-        entityId: project._id.toString(),
-        metadata: {
-            title: project.title,
-        },
-    });
-
-
+    await cleanupProjectData(project);
     return { message: "Project deleted successfully." };
 };
 
 exports.getProjectReviews = async (id) => {
     const project = await Project.findById(id);
     if (!project) {
-        const err = new Error("Project not found.");
-        err.status = 404;
-        throw err;
+        throw new AppError("Project not found.", 404);
     }
 
     return await Review.find({ project: id })
@@ -180,6 +162,3 @@ exports.getProjectReviews = async (id) => {
         .populate("project", "title status")
         .sort({ createdAt: -1 });
 };
-
-
-//Implemented log for UD

@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../../config/sqlite");
+const { ACTION_VALUES, ENTITY_VALUES } = require("../../constants/activityLogEnums");
 
 const ActivityLog = sequelize.define("ActivityLog", {
   id: {
@@ -7,17 +8,23 @@ const ActivityLog = sequelize.define("ActivityLog", {
     primaryKey: true,
     autoIncrement: true,
   },
-  userEmail: {
+  userId: {
     type: DataTypes.STRING,
     allowNull: true,
   },
   action: {
-    type: DataTypes.STRING,
+    type: DataTypes.ENUM(...ACTION_VALUES),
     allowNull: false,
+    validate: {
+      isIn: [ACTION_VALUES],
+    },
   },
   entity: {
-    type: DataTypes.STRING,
+    type: DataTypes.ENUM(...ENTITY_VALUES),
     allowNull: false,
+    validate: {
+      isIn: [ENTITY_VALUES],
+    },
   },
   entityId: {
     type: DataTypes.STRING,

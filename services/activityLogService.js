@@ -1,16 +1,18 @@
 const ActivityLog = require("../models/sql/ActivityLog");
 const {Op} = require("sequelize");
+const AppError = require("../utils/AppError");
 
-exports.createLog = async ({ userEmail, action, entity, entityId, metadata }) => {
-    return await ActivityLog.create({ userEmail, action, entity, entityId, metadata });
-}
+exports.createLog = async ({ userId, action, entity, entityId, metadata }) => {
+    return await ActivityLog.create({ userId, action, entity, entityId, metadata });
+};
 
 
 exports.getAllLogs = async (filters = {}) => {
     const where = {};
-    if (filters.userEmail) where.userEmail = filters.userEmail;
+    if (filters.userId) where.userId = filters.userId;
     if (filters.action) where.action = filters.action;
     if (filters.entity) where.entity = filters.entity;
+    if (filters.entityId) where.entityId = filters.entityId;
 
     if (filters.startDate || filters.endDate) {
         where.timestamp = {};
@@ -32,12 +34,25 @@ exports.getAllLogs = async (filters = {}) => {
     });
 };
 
-exports.getLogsByUser = async (email) => {
+exports.getLogsByUser = async (userId) => {
     return await ActivityLog.findAll({
-        where: { userEmail: email },
+        where: { userId },
         order: [["timestamp", "DESC"]],
     });
 
+};
+
+exports.getLogsByEntity = async (entity, entityId) => {
+    const where = { entity };
+
+    if (entityId) {
+        where.entityId = entityId;
+    }
+
+    return await ActivityLog.findAll({
+        where,
+        order: [["timestamp", "DESC"]],
+    });
 };
 
 
@@ -54,9 +69,7 @@ exports.deleteLogs = async () => {
 
 exports.deleteOldLogs = async (beforeDate) => {
     if (!beforeDate) {
-        const err = new Error("beforeDate query parameter is required.");
-        err.status = 400;
-        throw err;
+        throw new AppError("beforeDate query parameter is required.", 400);
     }
 
     const deletedCount = await ActivityLog.destroy({
@@ -72,5 +85,3 @@ exports.deleteOldLogs = async (beforeDate) => {
         deletedCount,
     };
 };
-
-//Added delete old logs and it's filter

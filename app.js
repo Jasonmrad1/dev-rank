@@ -9,10 +9,13 @@ const reviewRoutes = require("./routes/reviewRoutes");
 const skillRoutes = require("./routes/skillRoutes");
 const certificationRoutes = require("./routes/certificationRoutes");
 const activityLogRoutes = require("./routes/activityLogRoutes");
+const { registerEventListeners } = require("./listeners/registerEventListeners");
 
 const app = express();
 //middleware
 app.use(express.json());
+
+registerEventListeners();
 
 // Mount routes
 app.use("/api/users", userRoutes);
@@ -24,8 +27,12 @@ app.use("/api/logs", activityLogRoutes);
 
 // Global JSON error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Something went wrong!" });
+  if (err.isAppError) {
+    return res.status(err.statusCode).json({ error: err.message });
+  }
+  
+  console.error("[Unhandled Error]", err.stack);
+  res.status(500).json({ error: "Internal Server Error" });
 });
 
 const PORT = process.env.PORT || 3000;

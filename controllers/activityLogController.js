@@ -28,3 +28,16 @@ exports.deleteLogs = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+//Delete old logs
+
+exports.deleteOldLogs = async (req, res) => {
+  try {
+    const result = await activityLogService.deleteOldLogs(req.query.beforeDate);
+    res.status(200).json(result);
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message });
+  }
+};
+
+//Added old logs filter and delete

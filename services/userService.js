@@ -11,10 +11,10 @@ exports.registerUser = async ({ name, email, password, role, bio, githubUrl, ava
     throw err;
   }
   const passwordHash = await bcrypt.hash(password, 10);
-  
-  const user =await User.create({ name, email, passwordHash, role, bio, githubUrl, avatarUrl });
 
-  //activityLog
+  const user = await User.create({ name, email, passwordHash, role, bio, githubUrl, avatarUrl });
+
+  // activityLog
   await activityLogService.createLog({
     userEmail: user.email,
     action: "REGISTER_USER",
@@ -47,13 +47,26 @@ exports.updateUser = async (id, { name, bio, githubUrl, avatarUrl }) => {
   const user = await User.findByIdAndUpdate(
     id,
     { name, bio, githubUrl, avatarUrl },
-    { returnDocument: 'after', runValidators: true }
+    { returnDocument: "after", runValidators: true }
   ).populate("skills");
+
   if (!user) {
     const err = new Error("User not found.");
     err.status = 404;
     throw err;
   }
+
+  //Activity Log
+  await activityLogService.createLog({
+    userEmail: user.email,
+    action: "UPDATE_USER",
+    entity: "User",
+    entityId: user._id.toString(),
+    metadata: {
+      name: user.name,
+    },
+  });
+
   return user;
 };
 
@@ -64,6 +77,17 @@ exports.deleteUser = async (id) => {
     err.status = 404;
     throw err;
   }
+
+  //Activity Log
+  await activityLogService.createLog({
+    userEmail: user.email,
+    action: "DELETE_USER",
+    entity: "User",
+    entityId: user._id.toString(),
+    metadata: {
+      name: user.name,
+    },
+  });
 };
 
 const resolveSkillIds = async (inputs) => {
@@ -103,6 +127,19 @@ exports.addSkills = async (userId, skillInputs) => {
   await user.save();
   await Skill.updateMany({ _id: { $in: newIds } }, { $addToSet: { users: user._id } });
   await user.populate("skills");
+
+  //Activity Log for addskill
+  await activityLogService.createLog({
+    userEmail: user.email,
+    action: "ADD_USER_SKILLS",
+    entity: "User",
+    entityId: user._id.toString(),
+    metadata: {
+      skillsAdded: Array.isArray(skillInputs) ? skillInputs : [skillInputs],
+      count: newIds.length,
+    },
+  });
+
   return { user, count: newIds.length };
 };
 
@@ -117,23 +154,38 @@ exports.removeSkill = async (userId, skillId) => {
   const ids = await resolveSkillIds([skillId]);
   const idStrings = ids.map(String);
 
+  const existingSkillStrings = user.skills.map((s) => s.toString());
+  const removableIds = ids.filter((id) => existingSkillStrings.includes(id.toString()));
+
+  if (removableIds.length === 0) {
+    const err = new Error("This skill is not assigned to the user.");
+    err.status = 404;
+    throw err;
+  }
+
   user.skills = user.skills.filter((s) => !idStrings.includes(s.toString()));
   await user.save();
-  await Skill.updateMany({ _id: { $in: ids } }, { $pull: { users: user._id } });
 
-  //activity log
+  await Skill.updateMany(
+    { _id: { $in: removableIds } },
+    { $pull: { users: user._id } }
+  );
+
+  await user.populate("skills");
+
+  // activity log
   await activityLogService.createLog({
     userEmail: user.email,
-    action: "ADD_USER_SKILLS",
+    action: "REMOVE_USER_SKILL",
     entity: "User",
     entityId: user._id.toString(),
     metadata: {
-      skillsAdded: Array.isArray(skillInputs) ? skillInputs : [skillInputs],
-      count: newIds.length,
+      removedSkill: skillId,
+      count: removableIds.length,
     },
   });
 
-  return { user, count: ids.length };
+  return { user, count: removableIds.length };
 };
 
 exports.removeSkills = async (userId, skills) => {
@@ -144,12 +196,44 @@ exports.removeSkills = async (userId, skills) => {
     throw err;
   }
 
-  const ids = await resolveSkillIds(Array.isArray(skills) ? skills : [skills]);
-  const idStrings = ids.map(String);
+  const inputs = Array.isArray(skills) ? skills : [skills];
+  const ids = await resolveSkillIds(inputs);
 
-  user.skills = user.skills.filter((s) => !idStrings.includes(s.toString()));
+  const existingSkillStr = user.skills.map((s) => s.toString());
+  const removableIds = ids.filter((id) => existingSkillStr.includes(id.toString()));
+
+  if (removableIds.length === 0) {
+    const err = new Error("None of the provided skills are assigned to this user.");
+    err.status = 404;
+    throw err;
+  }
+
+  const removableStr = removableIds.map(String);
+
+  user.skills = user.skills.filter((s) => !removableStr.includes(s.toString()));
   await user.save();
-  await Skill.updateMany({ _id: { $in: ids } }, { $pull: { users: user._id } });
 
-  return { user, count: ids.length };
+  await Skill.updateMany(
+    { _id: { $in: removableIds } },
+    { $pull: { users: user._id } }
+  );
+
+  await user.populate("skills");
+
+  await activityLogService.createLog({
+    userEmail: user.email,
+    action: "REMOVE_USER_SKILLS",
+    entity: "User",
+    entityId: user._id.toString(),
+    metadata: {
+      skillsRemoved: inputs,
+      count: removableIds.length,
+    },
+  });
+
+  return { user, count: removableIds.length };
 };
+
+
+
+//Implemented Activity log

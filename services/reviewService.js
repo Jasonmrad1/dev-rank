@@ -11,6 +11,32 @@ const calculateAverage = (reviews, field) => {
     return Number((total / reviews.length).toFixed(2));
 };
 
+const recalculateUserProfileScore = async (userId) => {
+    const ownedProjects = await Project.find({ owner: userId });
+
+    if (ownedProjects.length === 0) {
+        await User.findByIdAndUpdate(userId, { profileScore: 0 });
+        return;
+    }
+
+    const scoredProjects = ownedProjects.filter(
+        (p) => typeof p.aggregateRating === "number" && p.totalReviews > 0
+    );
+
+    if (scoredProjects.length === 0) {
+        await User.findByIdAndUpdate(userId, { profileScore: 0 });
+        return;
+    }
+
+    const avg =
+        scoredProjects.reduce((sum, p) => sum + p.aggregateRating, 0) /
+        scoredProjects.length;
+
+    await User.findByIdAndUpdate(userId, {
+        profileScore: Number(avg.toFixed(2)),
+    });
+};
+
 const recalculateProjectAggregates = async (projectId) => {
     const reviews = await Review.find({
         project: projectId,
@@ -65,6 +91,28 @@ exports.createReview = async (data) => {
         throw err;
     }
 
+    if (!existingReviewer.isVerifiedReviewer || existingReviewer.role !== "reviewer") {
+        const err = new Error("Only verified reviewers can submit reviews.");
+        err.status = 403;
+        throw err;
+    }
+
+    //prevent user from reviewing their own project
+    if (existingProject.owner.toString() === reviewer.toString()) {
+        const err = new Error("Project owners cannot review their own projects.");
+        err.status = 403;
+        throw err;
+    }
+
+    //Reviewer can review project once
+    const alreadyReviewed = await Review.findOne({ project, reviewer });
+    if (alreadyReviewed) {
+        const err = new Error("This reviewer has already reviewed this project.");
+        err.status = 409;
+        throw err;
+    }
+
+
     const review = await Review.create({
         project,
         reviewer,
@@ -79,7 +127,8 @@ exports.createReview = async (data) => {
     });
 
     await recalculateProjectAggregates(project);
-    
+    await recalculateUserProfileScore(existingProject.owner)
+
     //implement activityLog
     await activityLogService.createLog({
         userEmail: existingReviewer.email,
@@ -150,9 +199,26 @@ exports.updateReview = async (id, data) => {
 
     await recalculateProjectAggregates(review.project);
 
-    return await Review.findById(review._id)
+    const updatedProject = await Project.findById(review.project);
+    await recalculateUserProfileScore(updatedProject.owner);
+
+    const populatedReview = await Review.findById(review._id)
         .populate("project", "title status")
         .populate("reviewer", "name email role githubUrl");
+
+    //Implement log for update Review
+    await activityLogService.createLog({
+        userEmail: populatedReview.reviewer.email,
+        action: "UPDATE_REVIEW",
+        entity: "Review",
+        entityId: review._id.toString(),
+        metadata: {
+            projectId: review.project.toString(),
+            status: review.status,
+        },
+    });
+
+    return populatedReview;
 
 
 };
@@ -166,7 +232,29 @@ exports.deleteReview = async (id) => {
         throw err;
     }
 
+    await Review.findByIdAndDelete(id);
+
     await recalculateProjectAggregates(review.project);
+
+    const affectedProject = await Project.findById(review.project);
+    if (affectedProject) {
+        await recalculateUserProfileScore(affectedProject.owner);
+    }
+
+    await activityLogService.createLog({
+        userEmail: review.reviewer.email,
+        action: "DELETE_REVIEW",
+        entity: "Review",
+        entityId: review._id.toString(),
+        metadata: {
+            projectId: review.project.toString(),
+        },
+    });
 
     return { message: "Review deleted successfully." };
 };
+
+
+//Remove dup reviews
+//Add profile Score recalculation
+//Implemented log for UD

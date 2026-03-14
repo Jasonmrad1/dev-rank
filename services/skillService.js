@@ -1,4 +1,5 @@
 const Skill = require("../models/mongo/Skill");
+const User = require("../models/mongo/User");
 
 exports.createSkill = async ({ name, category, isPreset }) => {
   const existing = await Skill.findOne({ name: { $regex: `^${name}$`, $options: "i" } });
@@ -29,12 +30,16 @@ exports.getSkill = async (id) => {
 };
 
 exports.getSkillByName = async (name) => {
-  const skill = await Skill.findOne({ name: { $regex: `^${name}$`, $options: "i" } }).populate("users", "name email avatarUrl");
+  const skill = await Skill.findOne({
+    name: { $regex: `^${name}$`, $options: "i" }
+  }).populate("users", "name email avatarUrl");
+
   if (!skill) {
     const err = new Error("Skill not found.");
     err.status = 404;
     throw err;
   }
+
   return skill;
 };
 
@@ -42,13 +47,15 @@ exports.updateSkill = async (id, { name, category, isPreset }) => {
   const skill = await Skill.findByIdAndUpdate(
     id,
     { name, category, isPreset },
-    { returnDocument: 'after', runValidators: true }
+    { returnDocument: "after", runValidators: true }
   );
+
   if (!skill) {
     const err = new Error("Skill not found.");
     err.status = 404;
     throw err;
   }
+
   return skill;
 };
 
@@ -59,27 +66,42 @@ exports.deleteSkill = async (id) => {
     err.status = 404;
     throw err;
   }
+
+  await User.updateMany(
+    { skills: skill._id },
+    { $pull: { skills: skill._id } }
+  );
 };
 
 exports.updateSkillByName = async (name, { name: newName, category, isPreset }) => {
   const skill = await Skill.findOneAndUpdate(
     { name: { $regex: `^${name}$`, $options: "i" } },
     { name: newName, category, isPreset },
-    { returnDocument: 'after', runValidators: true }
+    { returnDocument: "after", runValidators: true }
   );
+
   if (!skill) {
     const err = new Error("Skill not found.");
     err.status = 404;
     throw err;
   }
+
   return skill;
 };
 
 exports.deleteSkillByName = async (name) => {
-  const skill = await Skill.findOneAndDelete({ name: { $regex: `^${name}$`, $options: "i" } });
+  const skill = await Skill.findOneAndDelete({
+    name: { $regex: `^${name}$`, $options: "i" }
+  });
+
   if (!skill) {
     const err = new Error("Skill not found.");
     err.status = 404;
     throw err;
   }
+
+  await User.updateMany(
+    { skills: skill._id },
+    { $pull: { skills: skill._id } }
+  );
 };

@@ -27,7 +27,7 @@ exports.apply = async (data) => {
     techExpertise,
   });
 
-  await User.findByIdAndUpdate(user, { reviewerStatus: "pending" });
+  await User.findByIdAndUpdate(user, { reviewerStatus: "pending" }, {isVerifiedReviewer: false});
 
   //implement activityLog
   await activityLogService.createLog({
@@ -47,11 +47,32 @@ exports.getAllRequests = async () => {
   return await CertificationRequest.find().populate("user", "name email role reviewerStatus isVerifiedReviewer");
 };
 
-exports.approve = async (id, adminNotes) => {
+//Only admin can approve
+exports.approve = async (id, adminNotes, adminUserId) => {
+  const adminUser = await User.findById(adminUserId);
+  if (!adminUser) {
+    const err = new Error("Admin user not found!");
+    err.status = 404;
+    throw err;
+  }
+
+  if (adminUser.role !== "admin") {
+    const err = new Error("Only admins can approve certification requests.");
+    err.status = 403;
+    throw err;
+  }
+
   const request = await CertificationRequest.findById(id);
   if (!request) {
     const err = new Error("Certification request not found.");
     err.status = 404;
+    throw err;
+  }
+
+  //Only pending requests
+  if (request.status !== "pending") {
+    const err = new Error("Only pending certification requests can be approved.");
+    err.status = 409;
     throw err;
   }
 
@@ -83,11 +104,33 @@ exports.approve = async (id, adminNotes) => {
   return request;
 };
 
+//Only admin can reject
 exports.reject = async (id, adminNotes) => {
+
+  const adminUser = await User.findById(adminUserId);
+  if (!adminUser) {
+    const err = new Error("Admin user not found.");
+    err.status = 404;
+    throw err;
+  }
+
+  if (adminUser.role !== "admin") {
+    const err = new Error("Only admins can reject certification requests.");
+    err.status = 403;
+    throw err;
+  }
+
   const request = await CertificationRequest.findById(id);
   if (!request) {
     const err = new Error("Certification request not found.");
     err.status = 404;
+    throw err;
+  }
+
+  //Request must be pending 
+  if (request.status !== "pending") {
+    const err = new Error("Only pending certification requests can be rejected.");
+    err.status = 409;
     throw err;
   }
 
@@ -96,7 +139,7 @@ exports.reject = async (id, adminNotes) => {
   request.reviewedAt = new Date();
   await request.save();
 
-  await User.findByIdAndUpdate(request.user, { reviewerStatus: "rejected" });
+  await User.findByIdAndUpdate(request.user, { reviewerStatus: "rejected" , isVerifiedReviewer:false});
 
   const rejectedUser = await User.findById(request.user);
 
@@ -112,3 +155,7 @@ exports.reject = async (id, adminNotes) => {
 
   return request;
 };
+
+
+//Made admin only can approve or reject 
+//Req must be pending

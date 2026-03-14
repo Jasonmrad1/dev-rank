@@ -23,7 +23,7 @@ exports.getAllRequests = async (req, res) => {
 // Approve certification
 exports.approve = async (req, res) => {
   try {
-    const request = await certificationService.approve(req.params.id, req.body.adminNotes);
+    const request = await certificationService.approve(req.params.id, req.body.adminNotes, req.body.adminUserId);
     res.status(200).json(request);
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });
@@ -33,9 +33,12 @@ exports.approve = async (req, res) => {
 // Reject certification
 exports.reject = async (req, res) => {
   try {
-    const request = await certificationService.reject(req.params.id, req.body.adminNotes);
+    const request = await certificationService.reject(req.params.id, req.body.adminNotes, req.body.adminUserId);
     res.status(200).json(request);
   } catch (err) {
     res.status(err.status || 500).json({ error: err.message });
   }
 };
+
+
+//Send adminUserId to verify its an admin

@@ -96,11 +96,22 @@ exports.updateProject = async (id, data) => {
         throw err;
     }
 
+    await activityLogService.createLog({
+        userEmail: project.owner.email,
+        action: "UPDATE_PROJECT",
+        entity: "Project",
+        entityId: project._id.toString(),
+        metadata: {
+            title: project.title,
+            status: project.status,
+        },
+    });
+
     return project;
 };
 
 exports.deleteProject = async (id) => {
-    const project = await Project.findByIdAndDelete(id);
+    const project = await Project.findById(id).populate("owner", "email");
 
     if (!project) {
         const err = new Error("Project not found.");
@@ -108,8 +119,21 @@ exports.deleteProject = async (id) => {
         throw err;
     }
 
+    await Project.findByIdAndDelete(id);
     // delete also related reviews
     await Review.deleteMany({ project: id });
+
+    //log for update
+    await activityLogService.createLog({
+        userEmail: project.owner.email,
+        action: "DELETE_PROJECT",
+        entity: "Project",
+        entityId: project._id.toString(),
+        metadata: {
+            title: project.title,
+        },
+    });
+
 
     return { message: "Project deleted successfully." };
 };
@@ -127,3 +151,6 @@ exports.getProjectReviews = async (id) => {
         .populate("project", "title status")
         .sort({ createdAt: -1 });
 };
+
+
+//Implemented log for UD

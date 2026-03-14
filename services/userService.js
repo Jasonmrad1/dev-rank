@@ -3,6 +3,10 @@ const User = require("../models/mongo/User");
 const Skill = require("../models/mongo/Skill");
 const activityLogService = require("./activityLogService");
 
+const Project = require("../models/mongo/Project");
+const Review = require("../models/mongo/Review");
+const CertificationRequest = require("../models/mongo/CertificationRequest");
+
 exports.registerUser = async ({ name, email, password, role, bio, githubUrl, avatarUrl }) => {
   const existing = await User.findOne({ email });
   if (existing) {
@@ -71,14 +75,25 @@ exports.updateUser = async (id, { name, bio, githubUrl, avatarUrl }) => {
 };
 
 exports.deleteUser = async (id) => {
-  const user = await User.findByIdAndDelete(id);
+  const user = await User.findById(id);
   if (!user) {
     const err = new Error("User not found.");
     err.status = 404;
     throw err;
   }
 
-  //Activity Log
+  await Project.deleteMany({ owner: user._id });
+  await Review.deleteMany({ reviewer: user._id });
+
+  await Skill.updateMany(
+    { users: user._id },
+    { $pull: { users: user._id } }
+  );
+
+  await CertificationRequest.deleteMany({ user: user._id });
+
+  await User.findByIdAndDelete(id);
+
   await activityLogService.createLog({
     userEmail: user.email,
     action: "DELETE_USER",
@@ -88,6 +103,8 @@ exports.deleteUser = async (id) => {
       name: user.name,
     },
   });
+
+  return { message: "User deleted successfully." };
 };
 
 const resolveSkillIds = async (inputs) => {
@@ -237,3 +254,4 @@ exports.removeSkills = async (userId, skills) => {
 
 
 //Implemented Activity log
+//cleaning related records after deleting a user

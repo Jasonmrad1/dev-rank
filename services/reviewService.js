@@ -2,39 +2,13 @@ const Review = require("../models/mongo/Review");
 const Project = require("../models/mongo/Project");
 const User = require("../models/mongo/User");
 const activityLogService = require("./activityLogService");
-
+const {recalculateUserProfileScore}= require("./projectService");
 
 const calculateAverage = (reviews, field) => {
     if (reviews.length === 0) return 0;
 
     const total = reviews.reduce((sum, review) => sum + review[field], 0);
     return Number((total / reviews.length).toFixed(2));
-};
-
-const recalculateUserProfileScore = async (userId) => {
-    const ownedProjects = await Project.find({ owner: userId });
-
-    if (ownedProjects.length === 0) {
-        await User.findByIdAndUpdate(userId, { profileScore: 0 });
-        return;
-    }
-
-    const scoredProjects = ownedProjects.filter(
-        (p) => typeof p.aggregateRating === "number" && p.totalReviews > 0
-    );
-
-    if (scoredProjects.length === 0) {
-        await User.findByIdAndUpdate(userId, { profileScore: 0 });
-        return;
-    }
-
-    const avg =
-        scoredProjects.reduce((sum, p) => sum + p.aggregateRating, 0) /
-        scoredProjects.length;
-
-    await User.findByIdAndUpdate(userId, {
-        profileScore: Number(avg.toFixed(2)),
-    });
 };
 
 const recalculateProjectAggregates = async (projectId) => {
@@ -127,7 +101,7 @@ exports.createReview = async (data) => {
     });
 
     await recalculateProjectAggregates(project);
-    await recalculateUserProfileScore(existingProject.owner)
+    await recalculateUserProfileScore(existingProject.owner);
 
     //implement activityLog
     await activityLogService.createLog({
@@ -224,7 +198,7 @@ exports.updateReview = async (id, data) => {
 };
 
 exports.deleteReview = async (id) => {
-    const review = await Review.findByIdAndDelete(id);
+    const review = await Review.findById(id).populate("reviewer", "email");
 
     if (!review) {
         const err = new Error("Review not found.");

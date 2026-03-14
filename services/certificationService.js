@@ -27,7 +27,7 @@ exports.apply = async (data) => {
     techExpertise,
   });
 
-  await User.findByIdAndUpdate(user, { reviewerStatus: "pending" }, {isVerifiedReviewer: false});
+  await User.findByIdAndUpdate(user, { reviewerStatus: "pending" , isVerifiedReviewer: false});
 
   //implement activityLog
   await activityLogService.createLog({
@@ -87,11 +87,9 @@ exports.approve = async (id, adminNotes, adminUserId) => {
     role: "reviewer",
   });
 
-  const approvedUser = await User.findById(request.user);
-
   //activity log
   await activityLogService.createLog({
-    userEmail: approvedUser.email,
+    userEmail: adminUser.email,
     action: "APPROVE_CERTIFICATION",
     entity: "CertificationRequest",
     entityId: request._id.toString(),
@@ -105,7 +103,7 @@ exports.approve = async (id, adminNotes, adminUserId) => {
 };
 
 //Only admin can reject
-exports.reject = async (id, adminNotes) => {
+exports.reject = async (id, adminNotes, adminUserId) => {
 
   const adminUser = await User.findById(adminUserId);
   if (!adminUser) {
@@ -127,7 +125,7 @@ exports.reject = async (id, adminNotes) => {
     throw err;
   }
 
-  //Request must be pending 
+  //Request must be pending
   if (request.status !== "pending") {
     const err = new Error("Only pending certification requests can be rejected.");
     err.status = 409;
@@ -141,10 +139,8 @@ exports.reject = async (id, adminNotes) => {
 
   await User.findByIdAndUpdate(request.user, { reviewerStatus: "rejected" , isVerifiedReviewer:false});
 
-  const rejectedUser = await User.findById(request.user);
-
   await activityLogService.createLog({
-    userEmail: rejectedUser.email,
+    userEmail: adminUser.email,
     action: "REJECT_CERTIFICATION",
     entity: "CertificationRequest",
     entityId: request._id.toString(),
@@ -157,5 +153,5 @@ exports.reject = async (id, adminNotes) => {
 };
 
 
-//Made admin only can approve or reject 
+//Made admin only can approve or reject
 //Req must be pending

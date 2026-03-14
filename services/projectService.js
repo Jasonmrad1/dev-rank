@@ -3,6 +3,32 @@ const Review = require("../models/mongo/Review");
 const User = require("../models/mongo/User");
 const activityLogService = require("./activityLogService");
 
+exports.recalculateUserProfileScore = async (userId) => {
+    const ownedProjects = await Project.find({ owner: userId });
+
+    if (ownedProjects.length === 0) {
+        await User.findByIdAndUpdate(userId, { profileScore: 0 });
+        return;
+    }
+
+    const scoredProjects = ownedProjects.filter(
+        (p) => typeof p.aggregateRating === "number" && p.totalReviews > 0
+    );
+
+    if (scoredProjects.length === 0) {
+        await User.findByIdAndUpdate(userId, { profileScore: 0 });
+        return;
+    }
+
+    const avg =
+        scoredProjects.reduce((sum, p) => sum + p.aggregateRating, 0) /
+        scoredProjects.length;
+
+    await User.findByIdAndUpdate(userId, {
+        profileScore: Number(avg.toFixed(2)),
+    });
+};
+
 exports.createProject = async (data) => {
     const { owner, title, description, repoUrl, liveUrl, techStack, status } = data;
 
@@ -123,7 +149,10 @@ exports.deleteProject = async (id) => {
     // delete also related reviews
     await Review.deleteMany({ project: id });
 
-    //log for update
+    await exports.recalculateUserProfileScore(project.owner._id);
+
+
+    //log for delete
     await activityLogService.createLog({
         userEmail: project.owner.email,
         action: "DELETE_PROJECT",

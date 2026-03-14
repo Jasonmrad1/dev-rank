@@ -1,6 +1,7 @@
 const Review = require("../models/mongo/Review");
 const Project = require("../models/mongo/Project");
 const User = require("../models/mongo/User");
+const activityLogService = require("./activityLogService");
 
 
 const calculateAverage = (reviews, field) => {
@@ -78,6 +79,19 @@ exports.createReview = async (data) => {
     });
 
     await recalculateProjectAggregates(project);
+    
+    //implement activityLog
+    await activityLogService.createLog({
+        userEmail: existingReviewer.email,
+        action: "CREATE_REVIEW",
+        entity: "Review",
+        entityId: review._id.toString(),
+        metadata: {
+            projectId: project.toString(),
+            overallRating,
+            status,
+        },
+    });
 
     return await review.populate([
         { path: "project", select: "title status" },
@@ -134,7 +148,7 @@ exports.updateReview = async (id, data) => {
         throw err;
     }
 
-    await recalculateProjectAggregates(review.project._id);
+    await recalculateProjectAggregates(review.project);
 
     return await Review.findById(review._id)
         .populate("project", "title status")

@@ -1,5 +1,6 @@
 const CertificationRequest = require("../models/mongo/CertificationRequest");
 const User = require("../models/mongo/User");
+const activityLogService = require("./activityLogService");
 
 exports.apply = async (data) => {
   const { user, cvUrl, experience, motivation, techExpertise } = data;
@@ -28,6 +29,17 @@ exports.apply = async (data) => {
 
   await User.findByIdAndUpdate(user, { reviewerStatus: "pending" });
 
+  //implement activityLog
+  await activityLogService.createLog({
+    userEmail: existingUser.email,
+    action: "APPLY_CERTIFICATION",
+    entity: "CertificationRequest",
+    entityId: request._id.toString(),
+    metadata: {
+      techExpertise,
+    },
+  });
+
   return request;
 };
 
@@ -54,6 +66,20 @@ exports.approve = async (id, adminNotes) => {
     role: "reviewer",
   });
 
+  const approvedUser = await User.findById(request.user);
+
+  //activity log
+  await activityLogService.createLog({
+    userEmail: approvedUser.email,
+    action: "APPROVE_CERTIFICATION",
+    entity: "CertificationRequest",
+    entityId: request._id.toString(),
+    metadata: {
+      adminNotes,
+    },
+  });
+
+
   return request;
 };
 
@@ -71,6 +97,18 @@ exports.reject = async (id, adminNotes) => {
   await request.save();
 
   await User.findByIdAndUpdate(request.user, { reviewerStatus: "rejected" });
+
+  const rejectedUser = await User.findById(request.user);
+
+  await activityLogService.createLog({
+    userEmail: rejectedUser.email,
+    action: "REJECT_CERTIFICATION",
+    entity: "CertificationRequest",
+    entityId: request._id.toString(),
+    metadata: {
+      adminNotes,
+    },
+  });
 
   return request;
 };

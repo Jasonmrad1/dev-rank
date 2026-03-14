@@ -1,6 +1,7 @@
 const Project = require("../models/mongo/Project");
 const Review = require("../models/mongo/Review");
 const User = require("../models/mongo/User");
+const activityLogService = require("./activityLogService");
 
 exports.createProject = async (data) => {
     const { owner, title, description, repoUrl, liveUrl, techStack, status } = data;
@@ -20,6 +21,18 @@ exports.createProject = async (data) => {
         liveUrl,
         techStack,
         status,
+    });
+
+    //implement activityLog
+    await activityLogService.createLog({
+        userEmail: ownerUser.email,
+        action: "CREATE_PROJECT",
+        entity: "Project",
+        entityId: project._id.toString(),
+        metadata: {
+            title: project.title,
+            status: project.status,
+        },
     });
 
     return await project.populate("owner", "name email role githubUrl");
@@ -95,7 +108,7 @@ exports.deleteProject = async (id) => {
         throw err;
     }
 
-    // delete related reviews too
+    // delete also related reviews
     await Review.deleteMany({ project: id });
 
     return { message: "Project deleted successfully." };

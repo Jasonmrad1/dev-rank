@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/mongo/User");
 const Skill = require("../models/mongo/Skill");
+const activityLogService = require("./activityLogService");
 
 exports.registerUser = async ({ name, email, password, role, bio, githubUrl, avatarUrl }) => {
   const existing = await User.findOne({ email });
@@ -10,7 +11,22 @@ exports.registerUser = async ({ name, email, password, role, bio, githubUrl, ava
     throw err;
   }
   const passwordHash = await bcrypt.hash(password, 10);
-  return await User.create({ name, email, passwordHash, role, bio, githubUrl, avatarUrl });
+  
+  const user =await User.create({ name, email, passwordHash, role, bio, githubUrl, avatarUrl });
+
+  //activityLog
+  await activityLogService.createLog({
+    userEmail: user.email,
+    action: "REGISTER_USER",
+    entity: "User",
+    entityId: user._id.toString(),
+    metadata: {
+      name: user.name,
+      role: user.role,
+    },
+  });
+
+  return user;
 };
 
 exports.getAllUsers = async () => {
@@ -84,7 +100,7 @@ exports.addSkills = async (userId, skillInputs) => {
   }
 
   user.skills.push(...newIds);
-  await user.save().pop;
+  await user.save();
   await Skill.updateMany({ _id: { $in: newIds } }, { $addToSet: { users: user._id } });
   await user.populate("skills");
   return { user, count: newIds.length };
@@ -104,6 +120,18 @@ exports.removeSkill = async (userId, skillId) => {
   user.skills = user.skills.filter((s) => !idStrings.includes(s.toString()));
   await user.save();
   await Skill.updateMany({ _id: { $in: ids } }, { $pull: { users: user._id } });
+
+  //activity log
+  await activityLogService.createLog({
+    userEmail: user.email,
+    action: "ADD_USER_SKILLS",
+    entity: "User",
+    entityId: user._id.toString(),
+    metadata: {
+      skillsAdded: Array.isArray(skillInputs) ? skillInputs : [skillInputs],
+      count: newIds.length,
+    },
+  });
 
   return { user, count: ids.length };
 };

@@ -1,0 +1,726 @@
+{
+  "info": {
+    "_postman_id": "123ed3a3-4cd5-4511-8fe3-581f24409834",
+    "name": "DevRank",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "52110503",
+    "_collection_link": "https://go.postman.co/collection/52110503-123ed3a3-4cd5-4511-8fe3-581f24409834?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Users Routes",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Jason mrad\",\r\n    \"email\": \"jason.mrad@net.usek.edu.lb\",\r\n    \"password\": \"123456\",\r\n    \"role\": \"admin\",\r\n    \"githubUrl\": \"https://github.com/Jasonmrad1\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/users/register",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "users",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/users/69b1b2c8c1cf8cef7b68071c",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "users",
+                "69b1b2c8c1cf8cef7b68071c"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Users",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/users",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Jason Mrad 2\",\r\n    \"githubUrl\": \"https://github.com/updatedJasonMrad\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/users/69b1b2c8c1cf8cef7b68071c",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "users",
+                "69b1b2c8c1cf8cef7b68071c"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Skill",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"skills\": [\r\n        \"Express.js\"\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/users/69b1b2c8c1cf8cef7b68071c/skills",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "users",
+                "69b1b2c8c1cf8cef7b68071c",
+                "skills"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Skills",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"skills\": [\r\n        \"Java\",\r\n        \"React\",\r\n        \"Node.js\"\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/users/69b1b2c8c1cf8cef7b68071c/skills",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "users",
+                "69b1b2c8c1cf8cef7b68071c",
+                "skills"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Skill",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/users/69b1b2c8c1cf8cef7b68071c/skills/69b1b18f748ae8942e597e9a",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "users",
+                "69b1b2c8c1cf8cef7b68071c",
+                "skills",
+                "69b1b18f748ae8942e597e9a"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Skill By Name",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/users/69b1b2c8c1cf8cef7b68071c/skills/Express.js",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "users",
+                "69b1b2c8c1cf8cef7b68071c",
+                "skills",
+                "Express.js"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Skills",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"skills\": [\r\n        \"69b1b18f748ae8942e597e94\",\r\n        \"Node.js\"\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/users/69b1b2c8c1cf8cef7b68071c/skills",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "users",
+                "69b1b2c8c1cf8cef7b68071c",
+                "skills"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Skills By Name",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"skills\": [\r\n        \"Java\",\r\n        \"React\",\r\n        \"Node.js\"\r\n    ]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/users/69b1b2c8c1cf8cef7b68071c/skills",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "users",
+                "69b1b2c8c1cf8cef7b68071c",
+                "skills"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/users/69b1b2c8c1cf8cef7b68071c",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "users",
+                "69b1b2c8c1cf8cef7b68071c"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Skills Routes",
+      "item": [
+        {
+          "name": "Get Skills",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/skills",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "skills"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Skill",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/skills/69b1b18f748ae8942e597e70",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "skills",
+                "69b1b18f748ae8942e597e70"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Skill By Name",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:3000/api/skills/name/JavaScript",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "skills",
+                "name",
+                "JavaScript"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Skill",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Firebase\",\r\n    \"category\": \"database\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/skills",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "skills"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Skill",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"category\": [\"backend\", \"database\", \"mobile\", \"devops\"]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/skills/69b1b1b5e29830d5991ebd5c",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "skills",
+                "69b1b1b5e29830d5991ebd5c"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Skill By Name",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"category\": [\"backend\", \"database\"]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/skills/name/firebase",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "skills",
+                "name",
+                "firebase"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Skill",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/skills/69b1b1b5e29830d5991ebd5c",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "skills",
+                "69b1b1b5e29830d5991ebd5c"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Skill By Name",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/skills/name/javascript",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "skills",
+                "name",
+                "javascript"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Certifications Routes",
+      "item": [
+        {
+          "name": "Create Certificate",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"user\": \"69b3064f1e6f21f3d2f9d4cc\",\r\n    \"cvUrl\": \"mycv.com\",\r\n    \"experience\": \"Senior\",\r\n    \"motivation\": \"Code quality\",\r\n    \"techExpertise\": \"Backend Development\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/certifications/apply",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "certifications",
+                "apply"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Requests",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/certifications",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "certifications"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Request",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"adminNotes\": \"Congratulations you are now a certified reviewer\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/certifications/69b3065c1e6f21f3d2f9d4d0/approve",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "certifications",
+                "69b3065c1e6f21f3d2f9d4d0",
+                "approve"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Decline Request",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"adminNotes\": \"Unfortunately your application was rejected\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/certifications/69b3065c1e6f21f3d2f9d4d0/reject",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "certifications",
+                "69b3065c1e6f21f3d2f9d4d0",
+                "reject"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Projects Routes",
+      "item": [
+        {
+          "name": "Create project",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"owner\": \"69b3064f1e6f21f3d2f9d4cc\",\r\n    \"title\": \"myProject\",\r\n    \"description\": \"Ecommerce project\",\r\n    \"repoUrl\": \"https://github.com/Jasonmrad1/dev-rank\",\r\n    \"liveUrl\": \"https://github.com/Jasonmrad1/dev-rank/live\",\r\n    \"techStack\": \"Javascript\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/projects",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "projects"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get project",
+          "request": {
+            "method": "GET",
+            "header": []
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,11 +1,12 @@
 const Skill = require("../models/mongo/Skill");
 const User = require("../models/mongo/User");
 const AppError = require("../utils/AppError");
+const ERROR_CODES = require("../utils/errorCodes");
 
 exports.createSkill = async ({ name, category, isPreset }) => {
   const existing = await Skill.findOne({ name: { $regex: `^${name}$`, $options: "i" } });
   if (existing) {
-    throw new AppError("A skill with this name already exists.", 409);
+    throw new AppError("A skill with this name already exists.", 409, ERROR_CODES.DUPLICATE);
   }
   return await Skill.create({ name, category, isPreset: isPreset || false });
 };
@@ -20,7 +21,7 @@ exports.getAllSkills = async ({ category, preset }) => {
 exports.getSkill = async (id) => {
   const skill = await Skill.findById(id).populate("users", "name email avatarUrl");
   if (!skill) {
-    throw new AppError("Skill not found.", 404);
+    throw new AppError("Skill not found.", 404, ERROR_CODES.NOT_FOUND);
   }
   return skill;
 };
@@ -31,7 +32,7 @@ exports.getSkillByName = async (name) => {
   }).populate("users", "name email avatarUrl");
 
   if (!skill) {
-    throw new AppError("Skill not found.", 404);
+    throw new AppError("Skill not found.", 404, ERROR_CODES.NOT_FOUND);
   }
 
   return skill;
@@ -45,7 +46,7 @@ exports.updateSkill = async (id, { name, category, isPreset }) => {
     });
 
     if (existing) {
-      throw new AppError("A skill with this name already exists.", 409);
+      throw new AppError("A skill with this name already exists.", 409, ERROR_CODES.DUPLICATE);
     }
   }
 
@@ -56,7 +57,7 @@ exports.updateSkill = async (id, { name, category, isPreset }) => {
   );
 
   if (!skill) {
-    throw new AppError("Skill not found.", 404);
+    throw new AppError("Skill not found.", 404, ERROR_CODES.NOT_FOUND);
   }
 
   return skill;
@@ -73,7 +74,7 @@ async function cleanupSkillData(skillId) {
 exports.deleteSkill = async (id) => {
   const skill = await Skill.findByIdAndDelete(id);
   if (!skill) {
-    throw new AppError("Skill not found.", 404);
+    throw new AppError("Skill not found.", 404, ERROR_CODES.NOT_FOUND);
   }
   await cleanupSkillData(skill._id);
 };
@@ -89,7 +90,7 @@ exports.updateSkillByName = async (name, { name: newName, category, isPreset }) 
   );
 
   if (!skill) {
-    throw new AppError("Skill not found.", 404);
+    throw new AppError("Skill not found.", 404, ERROR_CODES.NOT_FOUND);
   }
 
   return skill;
@@ -101,7 +102,7 @@ exports.deleteSkillByName = async (name) => {
   });
 
   if (!skill) {
-    throw new AppError("Skill not found.", 404);
+    throw new AppError("Skill not found.", 404, ERROR_CODES.NOT_FOUND);
   }
   await cleanupSkillData(skill._id);
 };

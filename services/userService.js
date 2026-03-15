@@ -3,6 +3,7 @@ const User = require("../models/mongo/User");
 const Skill = require("../models/mongo/Skill");
 const userLogger = require("../loggers/userLogger");
 const AppError = require("../utils/AppError");
+const ERROR_CODES = require("../utils/errorCodes");
 
 const Project = require("../models/mongo/Project");
 const Review = require("../models/mongo/Review");
@@ -11,7 +12,7 @@ const CertificationRequest = require("../models/mongo/CertificationRequest");
 exports.registerUser = async ({ name, email, password, role, bio, githubUrl, avatarUrl }) => {
   const existing = await User.findOne({ email });
   if (existing) {
-    throw new AppError("A user with this email address already exists.", 409);
+    throw new AppError("A user with this email address already exists.", 409, ERROR_CODES.DUPLICATE);
   }
   const passwordHash = await bcrypt.hash(password, 10);
 
@@ -30,7 +31,15 @@ exports.getAllUsers = async () => {
 exports.getUser = async (id) => {
   const user = await User.findById(id).populate("skills");
   if (!user) {
-    throw new AppError("User not found.", 404);
+    throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
+  }
+  return user;
+};
+
+exports.getUserByName = async (name) => {
+  const user = await User.findOne({ name }).populate("skills");
+  if (!user) {
+    throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
   }
   return user;
 };
@@ -43,7 +52,7 @@ exports.updateUser = async (id, { name, bio, githubUrl, avatarUrl }) => {
   ).populate("skills");
 
   if (!user) {
-    throw new AppError("User not found.", 404);
+    throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
   }
 
   //Activity Log
@@ -66,7 +75,7 @@ async function cleanupUserData(user) {
 exports.deleteUser = async (id) => {
   const user = await User.findById(id);
   if (!user) {
-    throw new AppError("User not found.", 404);
+    throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
   }
 
   await cleanupUserData(user);
@@ -86,7 +95,7 @@ const resolveSkillIds = async (inputs) => {
     ],
   });
   if (skills.length !== arr.length) {
-    throw new AppError("One or more skills were not found.", 404);
+    throw new AppError("One or more skills were not found.", 404, ERROR_CODES.NOT_FOUND);
   }
   return skills.map((s) => s._id);
 };
@@ -94,14 +103,14 @@ const resolveSkillIds = async (inputs) => {
 exports.addSkills = async (userId, skillInputs) => {
   const user = await User.findById(userId);
   if (!user) {
-    throw new AppError("User not found.", 404);
+    throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
   }
 
   const ids = await resolveSkillIds(skillInputs);
 
   const newIds = ids.filter((id) => !user.skills.map((s) => s.toString()).includes(id.toString()));
   if (newIds.length === 0) {
-    throw new AppError("All provided skills are already assigned to this user.", 409);
+    throw new AppError("All provided skills are already assigned to this user.", 409, ERROR_CODES.DUPLICATE);
   }
 
   user.skills.push(...newIds);
@@ -122,7 +131,7 @@ exports.addSkills = async (userId, skillInputs) => {
 exports.removeSkill = async (userId, skillId) => {
   const user = await User.findById(userId);
   if (!user) {
-    throw new AppError("User not found.", 404);
+    throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
   }
 
   const ids = await resolveSkillIds([skillId]);
@@ -132,7 +141,7 @@ exports.removeSkill = async (userId, skillId) => {
   const removableIds = ids.filter((id) => existingSkillStrings.includes(id.toString()));
 
   if (removableIds.length === 0) {
-    throw new AppError("This skill is not assigned to the user.", 404);
+    throw new AppError("This skill is not assigned to the user.", 404, ERROR_CODES.NOT_FOUND);
   }
 
   user.skills = user.skills.filter((s) => !idStrings.includes(s.toString()));
@@ -154,7 +163,7 @@ exports.removeSkill = async (userId, skillId) => {
 exports.removeSkills = async (userId, skills) => {
   const user = await User.findById(userId);
   if (!user) {
-    throw new AppError("User not found.", 404);
+    throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
   }
 
   const inputs = Array.isArray(skills) ? skills : [skills];
@@ -164,7 +173,7 @@ exports.removeSkills = async (userId, skills) => {
   const removableIds = ids.filter((id) => existingSkillStr.includes(id.toString()));
 
   if (removableIds.length === 0) {
-    throw new AppError("None of the provided skills are assigned to this user.", 404);
+    throw new AppError("None of the provided skills are assigned to this user.", 404, ERROR_CODES.NOT_FOUND);
   }
 
   const removableStr = removableIds.map(String);

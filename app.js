@@ -28,11 +28,13 @@ app.use("/api/logs", activityLogRoutes);
 // Global JSON error handler
 app.use((err, req, res, next) => {
   if (err.isAppError) {
-    return res.status(err.statusCode).json({ error: err.message });
+    return res.status(err.statusCode).json({
+      error: err.message,
+      errorCode: err.errorCode || "ERR_GENERIC",
+    });
   }
-  
   console.error("[Unhandled Error]", err.stack);
-  res.status(500).json({ error: "Internal Server Error" });
+  res.status(500).json({ error: "Internal Server Error", errorCode: "ERR_INTERNAL" });
 });
 
 const PORT = process.env.PORT || 3000;

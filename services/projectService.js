@@ -3,6 +3,7 @@ const Review = require("../models/mongo/Review");
 const User = require("../models/mongo/User");
 const projectLogger = require("../loggers/projectLogger");
 const AppError = require("../utils/AppError");
+const ERROR_CODES = require("../utils/errorCodes");
 
 const recalculateUserProfileScore = async (userId) => {
     const ownedProjects = await Project.find({ owner: userId });
@@ -37,7 +38,7 @@ exports.createProject = async (data) => {
 
     const ownerUser = await User.findById(owner);
     if (!ownerUser) {
-        throw new AppError("Owner user not found.", 404);
+        throw new AppError("Owner user not found.", 404, ERROR_CODES.NOT_FOUND);
     }
 
     const project = await Project.create({
@@ -91,7 +92,7 @@ exports.getProject = async (id) => {
     );
 
     if (!project) {
-        throw new AppError("Project not found.", 404);
+        throw new AppError("Project not found.", 404, ERROR_CODES.NOT_FOUND);
     }
 
     return project;
@@ -112,7 +113,7 @@ exports.updateProject = async (id, data) => {
     ).populate("owner", "name email role githubUrl");
 
     if (!project) {
-        throw new AppError("Project not found.", 404);
+        throw new AppError("Project not found.", 404, ERROR_CODES.NOT_FOUND);
     }
 
     projectLogger.logProjectUpdated(
@@ -135,17 +136,13 @@ async function cleanupProjectData(project) {
     // Recalculate owner's profile score directly
     await recalculateUserProfileScore(project.owner._id);
     // Log the deletion
-    projectLogger.logProjectDeleted(
-      project.owner._id.toString(),
-      project._id.toString(),
-      project.title
-    );
+    projectLogger.logProjectDeleted(project.owner._id.toString(), project._id.toString(), project.title);
 }
 
 exports.deleteProject = async (id) => {
     const project = await Project.findById(id).populate("owner", "email");
     if (!project) {
-        throw new AppError("Project not found.", 404);
+        throw new AppError("Project not found.", 404, ERROR_CODES.NOT_FOUND);
     }
     await cleanupProjectData(project);
     return { message: "Project deleted successfully." };
@@ -154,11 +151,33 @@ exports.deleteProject = async (id) => {
 exports.getProjectReviews = async (id) => {
     const project = await Project.findById(id);
     if (!project) {
-        throw new AppError("Project not found.", 404);
+        throw new AppError("Project not found.", 404, ERROR_CODES.NOT_FOUND);
     }
 
     return await Review.find({ project: id })
         .populate("reviewer", "name email role githubUrl")
         .populate("project", "title status")
+        .sort({ createdAt: -1 });
+};
+
+exports.getProjectByTitle = async (title) => {
+    const project = await Project.findOne({ title })
+        .populate("owner", "name email role githubUrl");
+
+    if (!project) {
+        throw new AppError("Project not found.", 404, ERROR_CODES.NOT_FOUND);
+    }
+
+    return project;
+};
+
+exports.getProjectsByUser = async (userId) => {
+    const user = await User.findById(userId);
+    if (!user) {
+        throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
+    }
+
+    return await Project.find({ owner: userId })
+        .populate("owner", "name email role githubUrl")
         .sort({ createdAt: -1 });
 };

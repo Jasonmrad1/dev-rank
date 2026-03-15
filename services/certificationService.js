@@ -2,18 +2,19 @@ const CertificationRequest = require("../models/mongo/CertificationRequest");
 const User = require("../models/mongo/User");
 const certificationLogger = require("../loggers/certificationLogger");
 const AppError = require("../utils/AppError");
+const ERROR_CODES = require("../utils/errorCodes");
 
 exports.apply = async (data) => {
   const { user, cvUrl, experience, motivation, techExpertise } = data;
 
   const existingUser = await User.findById(user);
   if (!existingUser) {
-    throw new AppError("User not found.", 404);
+    throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
   }
 
   const existing = await CertificationRequest.findOne({ user, status: "pending" });
   if (existing) {
-    throw new AppError("User already has a pending certification request.", 409);
+    throw new AppError("User already has a pending certification request.", 409, ERROR_CODES.DUPLICATE);
   }
 
   const request = await CertificationRequest.create({
@@ -39,12 +40,12 @@ exports.getAllRequests = async () => {
 exports.approve = async (id, adminNotes) => {
   const request = await CertificationRequest.findById(id);
   if (!request) {
-    throw new AppError("Certification request not found.", 404);
+    throw new AppError("Certification request not found.", 404, ERROR_CODES.NOT_FOUND);
   }
 
   //Only pending requests
   if (request.status !== "pending") {
-    throw new AppError("Only pending certification requests can be approved.", 409);
+    throw new AppError("Only pending certification requests can be approved.", 409, ERROR_CODES.DUPLICATE);
   }
 
   request.status = "approved";
@@ -68,12 +69,12 @@ exports.approve = async (id, adminNotes) => {
 exports.reject = async (id, adminNotes) => {
   const request = await CertificationRequest.findById(id);
   if (!request) {
-    throw new AppError("Certification request not found.", 404);
+    throw new AppError("Certification request not found.", 404, ERROR_CODES.NOT_FOUND);
   }
 
   //Request must be pending
   if (request.status !== "pending") {
-    throw new AppError("Only pending certification requests can be rejected.", 409);
+    throw new AppError("Only pending certification requests can be rejected.", 409, ERROR_CODES.DUPLICATE);
   }
 
   request.status = "rejected";

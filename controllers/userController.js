@@ -19,6 +19,12 @@ exports.getUser = asyncHandler(async (req, res) => {
   res.status(200).json({ user });
 });
 
+// Get user by name
+exports.getUserByName = asyncHandler(async (req, res) => {
+  const user = await userService.getUserByName(req.params.name);
+  res.status(200).json({ user });
+});
+
 // Update user
 exports.updateUser = asyncHandler(async (req, res) => {
   const user = await userService.updateUser(req.params.id, req.body);

@@ -1,9 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const reviewController = require("../controllers/reviewController");
+const {
+  validateCreateReview,
+  validateUpdateReview,
+} = require("../middleware/validators/reviewValidators");
 
 // POST /api/reviews - Create a new review
-router.post("/", reviewController.createReview);
+router.post("/", validateCreateReview, reviewController.createReview);
 
 // GET /api/reviews - Get all reviews
 router.get("/", reviewController.getAllReviews);
@@ -12,7 +16,7 @@ router.get("/", reviewController.getAllReviews);
 router.get("/:id", reviewController.getReview);
 
 // PUT /api/reviews/:id - Update review
-router.put("/:id", reviewController.updateReview);
+router.put("/:id", validateUpdateReview, reviewController.updateReview);
 
 // DELETE /api/reviews/:id - Delete review
 router.delete("/:id", reviewController.deleteReview);

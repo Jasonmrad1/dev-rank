@@ -4,6 +4,7 @@ const User = require("../models/mongo/User");
 const reviewLogger = require("../loggers/reviewLogger");
 const {recalculateUserProfileScore}= require("./projectService");
 const AppError = require("../utils/AppError");
+const ERROR_CODES = require("../utils/errorCodes");
 
 const calculateAverage = (reviews, field) => {
     if (reviews.length === 0) return 0;
@@ -54,27 +55,27 @@ exports.createReview = async (data) => {
 
     const existingProject = await Project.findById(project);
     if (!existingProject) {
-        throw new AppError("Project not found.", 404);
+        throw new AppError("Project not found.", 404, ERROR_CODES.NOT_FOUND);
     }
 
     const existingReviewer = await User.findById(reviewer);
     if (!existingReviewer) {
-        throw new AppError("Reviewer user not found.", 404);
+        throw new AppError("Reviewer user not found.", 404, ERROR_CODES.NOT_FOUND);
     }
 
     if (!existingReviewer.isVerifiedReviewer || existingReviewer.role !== "reviewer") {
-        throw new AppError("Only verified reviewers can submit reviews.", 403);
+        throw new AppError("Only verified reviewers can submit reviews.", 403, ERROR_CODES.FORBIDDEN);
     }
 
     //prevent user from reviewing their own project
     if (existingProject.owner.toString() === reviewer.toString()) {
-        throw new AppError("Project owners cannot review their own projects.", 403);
+        throw new AppError("Project owners cannot review their own projects.", 403, ERROR_CODES.FORBIDDEN);
     }
 
     //Reviewer can review project once
     const alreadyReviewed = await Review.findOne({ project, reviewer });
     if (alreadyReviewed) {
-        throw new AppError("This reviewer has already reviewed this project.", 409);
+        throw new AppError("This reviewer has already reviewed this project.", 409, ERROR_CODES.DUPLICATE);
     }
 
 
@@ -128,7 +129,7 @@ exports.getReview = async (id) => {
         .populate("reviewer", "name email role githubUrl");
 
     if (!review) {
-        throw new AppError("Review not found.", 404);
+        throw new AppError("Review not found.", 404, ERROR_CODES.NOT_FOUND);
     }
 
     return review;
@@ -151,7 +152,7 @@ exports.updateReview = async (id, data) => {
     )
 
     if (!review) {
-        throw new AppError("Review not found.", 404);
+        throw new AppError("Review not found.", 404, ERROR_CODES.NOT_FOUND);
     }
 
     await recalculateProjectAggregates(review.project);
@@ -178,7 +179,7 @@ exports.deleteReview = async (id) => {
     const review = await Review.findById(id).populate("reviewer", "email");
 
     if (!review) {
-        throw new AppError("Review not found.", 404);
+        throw new AppError("Review not found.", 404, ERROR_CODES.NOT_FOUND);
     }
 
     await Review.findByIdAndDelete(id);

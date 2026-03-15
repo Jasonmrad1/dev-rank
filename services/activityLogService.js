@@ -1,6 +1,7 @@
 const ActivityLog = require("../models/sql/ActivityLog");
 const {Op} = require("sequelize");
 const AppError = require("../utils/AppError");
+const ERROR_CODES = require("../utils/errorCodes");
 
 exports.createLog = async ({ userId, action, entity, entityId, metadata }) => {
     return await ActivityLog.create({ userId, action, entity, entityId, metadata });
@@ -69,7 +70,7 @@ exports.deleteLogs = async () => {
 
 exports.deleteOldLogs = async (beforeDate) => {
     if (!beforeDate) {
-        throw new AppError("beforeDate query parameter is required.", 400);
+        throw new AppError("beforeDate query parameter is required.", 400, ERROR_CODES.VALIDATION);
     }
 
     const deletedCount = await ActivityLog.destroy({

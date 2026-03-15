@@ -37,6 +37,18 @@ exports.getProjectReviews = asyncHandler(async (req, res) => {
   res.status(200).json(reviews);
 });
 
+// Get project by title
+exports.getProjectByTitle = asyncHandler(async (req, res) => {
+  const project = await projectService.getProjectByTitle(req.params.title);
+  res.status(200).json({ project });
+});
+
+// Get all projects by a specific user
+exports.getProjectsByUser = asyncHandler(async (req, res) => {
+  const projects = await projectService.getProjectsByUser(req.params.userId);
+  res.status(200).json({ projects });
+});
+
 
 
 

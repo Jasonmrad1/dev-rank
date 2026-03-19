@@ -1,10 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const certificationController = require("../controllers/certificationController");
-const {
-  validateCreateCertificationRequest,
-  validateUpdateCertificationRequest,
-} = require("../middleware/validators/certificationValidators");
+const {validateCreateCertificationRequest, validateUpdateCertificationRequest} = require("../middleware/validators/certificationValidators");
 
 // POST /api/certifications/apply - Apply for certification
 router.post("/apply", validateCreateCertificationRequest, certificationController.apply);

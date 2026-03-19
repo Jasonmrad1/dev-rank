@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema({
     default: "none",
   },
   skills: [{ type: mongoose.Schema.Types.ObjectId, ref: "Skill" }],
+  badges: [{ type: mongoose.Schema.Types.ObjectId, ref: "Badge" }],
   profileScore: { type: Number, default: 0 },
   joinedAt: { type: Date, default: Date.now },
 });

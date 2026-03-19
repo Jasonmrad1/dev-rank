@@ -1,10 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const skillController = require("../controllers/skillController");
-const {
-  validateCreateSkill,
-  validateUpdateSkill,
-} = require("../middleware/validators/skillValidators");
+const {validateCreateSkill, validateUpdateSkill} = require("../middleware/validators/skillValidators");
 
 // POST /api/skills - Create a new skill
 router.post("/", validateCreateSkill, skillController.createSkill);

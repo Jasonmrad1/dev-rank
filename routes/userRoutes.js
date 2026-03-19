@@ -1,12 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
-const {
-  validateRegister,
-  validateUpdateUser,
-  validateAddSkills,
-  validateRemoveSkills,
-} = require("../middleware/validators/userValidators");
+const {validateRegister, validateUpdateUser, validateAddSkills, validateRemoveSkills} = require("../middleware/validators/userValidators");
 
 // POST /api/users/register - Register a new user
 router.post("/register", validateRegister, userController.register);

@@ -8,6 +8,7 @@ const projectRoutes = require("./routes/projectRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
 const skillRoutes = require("./routes/skillRoutes");
 const certificationRoutes = require("./routes/certificationRoutes");
+const badgeRoutes = require("./routes/badgeRoutes");
 const activityLogRoutes = require("./routes/activityLogRoutes");
 const { registerEventListeners } = require("./listeners/registerEventListeners");
 
@@ -23,6 +24,7 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/skills", skillRoutes);
 app.use("/api/certifications", certificationRoutes);
+app.use("/api/badges", badgeRoutes);
 app.use("/api/logs", activityLogRoutes);
 
 // Global JSON error handler

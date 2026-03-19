@@ -1,10 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const projectController = require("../controllers/projectController");
-const {
-  validateCreateProject,
-  validateUpdateProject,
-} = require("../middleware/validators/projectValidators");
+const {validateCreateProject, validateUpdateProject} = require("../middleware/validators/projectValidators");
 
 // POST /api/projects - Create a new project
 router.post("/", validateCreateProject, projectController.createProject);

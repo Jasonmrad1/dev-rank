@@ -1,10 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const reviewController = require("../controllers/reviewController");
-const {
-  validateCreateReview,
-  validateUpdateReview,
-} = require("../middleware/validators/reviewValidators");
+const {validateUpdateReview, validateCreateReview} = require("../middleware/validators/reviewValidators");
 
 // POST /api/reviews - Create a new review
 router.post("/", validateCreateReview, reviewController.createReview);

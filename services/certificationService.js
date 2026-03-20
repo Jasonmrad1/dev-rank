@@ -36,14 +36,12 @@ exports.getAllRequests = async () => {
   return await CertificationRequest.find().populate("user", "name email role reviewerStatus isVerifiedReviewer");
 };
 
-//Approve certification request
 exports.approve = async (id, adminNotes) => {
   const request = await CertificationRequest.findById(id);
   if (!request) {
     throw new AppError("Certification request not found.", 404, ERROR_CODES.NOT_FOUND);
   }
 
-  //Only pending requests
   if (request.status !== "pending") {
     throw new AppError("Only pending certification requests can be approved.", 409, ERROR_CODES.DUPLICATE);
   }
@@ -59,20 +57,17 @@ exports.approve = async (id, adminNotes) => {
     role: "reviewer",
   });
 
-  //activity log
   certificationLogger.logCertificationApproved("system", request._id.toString(), adminNotes);
 
   return request;
 };
 
-//Reject certification request
 exports.reject = async (id, adminNotes) => {
   const request = await CertificationRequest.findById(id);
   if (!request) {
     throw new AppError("Certification request not found.", 404, ERROR_CODES.NOT_FOUND);
   }
 
-  //Request must be pending
   if (request.status !== "pending") {
     throw new AppError("Only pending certification requests can be rejected.", 409, ERROR_CODES.DUPLICATE);
   }

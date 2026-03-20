@@ -1,4 +1,4 @@
-const { body, validationResult } = require("express-validator");
+const { body, param, validationResult } = require("express-validator");
 
 // Middleware to handle validation errors
 const handleValidationErrors = (req, res, next) => {
@@ -100,5 +100,31 @@ exports.validateRemoveSkills = [
     .trim()
     .notEmpty()
     .withMessage("Each skill must be a non-empty string"),
+  handleValidationErrors,
+];
+
+// Validate user ID in URL params (for follow/unfollow operations)
+exports.validateFollowTarget = [
+  param("targetId")
+    .isMongoId()
+    .withMessage("Target ID must be a valid user ID"),
+  handleValidationErrors,
+];
+
+// Validate user ID in URL params (for getting followers/following)
+exports.validateUserIdParam = [
+  param("userId")
+    .isMongoId()
+    .withMessage("User ID must be a valid user ID"),
+  handleValidationErrors,
+];
+
+// Validate follow/unfollow request body (requires userId)
+exports.validateFollowRequest = [
+  body("userId")
+    .notEmpty()
+    .withMessage("User ID is required")
+    .isMongoId()
+    .withMessage("User ID must be a valid user ID"),
   handleValidationErrors,
 ];

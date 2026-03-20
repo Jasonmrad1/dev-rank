@@ -80,8 +80,7 @@ exports.deleteSkill = async (id) => {
 };
 
 
-//Check if skill name already exists
-///to ensure not renaming a skill to an already existed one
+// Check if skill name already exists to ensure not renaming a skill to an already existed one
 exports.updateSkillByName = async (name, { name: newName, category, isPreset }) => {
   const skill = await Skill.findOneAndUpdate(
     { name: { $regex: `^${name}$`, $options: "i" } },

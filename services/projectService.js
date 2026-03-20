@@ -51,13 +51,7 @@ exports.createProject = async (data) => {
         status,
     });
 
-    //implement activityLog
-    projectLogger.logProjectCreated(
-      ownerUser._id.toString(),
-      project._id.toString(),
-      project.title,
-      project.status
-    );
+    projectLogger.logProjectCreated(ownerUser._id.toString(), project._id.toString(), project.title, project.status);
 
     return await project.populate("owner", "name email role githubUrl");
 };
@@ -116,18 +110,12 @@ exports.updateProject = async (id, data) => {
         throw new AppError("Project not found.", 404, ERROR_CODES.NOT_FOUND);
     }
 
-    projectLogger.logProjectUpdated(
-      project.owner._id.toString(),
-      project._id.toString(),
-      project.title,
-      project.status
-    );
+    projectLogger.logProjectUpdated(project.owner._id.toString(), project._id.toString(), project.title, project.status);
 
     return project;
 };
 
 
-// Helper function to clean up project data on deletion
 async function cleanupProjectData(project) {
     // Delete the project
     await Project.findByIdAndDelete(project._id);
@@ -135,8 +123,6 @@ async function cleanupProjectData(project) {
     await Review.deleteMany({ project: project._id });
     // Recalculate owner's profile score directly
     await recalculateUserProfileScore(project.owner._id);
-    // Log the deletion
-    projectLogger.logProjectDeleted(project.owner._id.toString(), project._id.toString(), project.title);
 }
 
 exports.deleteProject = async (id) => {
@@ -145,6 +131,8 @@ exports.deleteProject = async (id) => {
         throw new AppError("Project not found.", 404, ERROR_CODES.NOT_FOUND);
     }
     await cleanupProjectData(project);
+
+    projectLogger.logProjectDeleted(project.owner._id.toString(), project._id.toString(), project.title);
     return { message: "Project deleted successfully." };
 };
 

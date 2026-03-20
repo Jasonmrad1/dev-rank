@@ -18,7 +18,6 @@ exports.registerUser = async ({ name, email, password, role, bio, githubUrl, ava
 
   const user = await User.create({ name, email, passwordHash, role, bio, githubUrl, avatarUrl });
 
-  // activityLog
   userLogger.logUserRegistered(user._id.toString(), user.name, user.role);
 
   return user;
@@ -55,7 +54,6 @@ exports.updateUser = async (id, { name, bio, githubUrl, avatarUrl }) => {
     throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
   }
 
-  //Activity Log
   userLogger.logUserUpdated(user._id.toString(), user.name);
 
   return user;
@@ -63,13 +61,24 @@ exports.updateUser = async (id, { name, bio, githubUrl, avatarUrl }) => {
 
 
 async function cleanupUserData(user) {
+  // Delete projects and reviews
   await Project.deleteMany({ owner: user._id });
   await Review.deleteMany({ reviewer: user._id });
+  // Remove from skills
   await Skill.updateMany(
     { users: user._id },
     { $pull: { users: user._id } }
   );
   await CertificationRequest.deleteMany({ user: user._id });
+  // Remove from followers/following relationships
+  await User.updateMany(
+    { followers: user._id },
+    { $pull: { followers: user._id } }
+  );
+  await User.updateMany(
+    { following: user._id },
+    { $pull: { following: user._id } }
+  );
 }
 
 exports.deleteUser = async (id) => {
@@ -118,12 +127,7 @@ exports.addSkills = async (userId, skillInputs) => {
   await Skill.updateMany({ _id: { $in: newIds } }, { $addToSet: { users: user._id } });
   await user.populate("skills");
 
-  //Activity Log for addskill
-  userLogger.logUserSkillsAdded(
-    user._id.toString(),
-    Array.isArray(skillInputs) ? skillInputs : [skillInputs],
-    newIds.length
-  );
+  userLogger.logUserSkillsAdded(user._id.toString(), Array.isArray(skillInputs) ? skillInputs : [skillInputs], newIds.length);
 
   return { user, count: newIds.length };
 };
@@ -154,10 +158,69 @@ exports.removeSkill = async (userId, skillId) => {
 
   await user.populate("skills");
 
-  // activity log
   userLogger.logUserSkillRemoved(user._id.toString(), skillId, removableIds.length);
 
   return { user, count: removableIds.length };
+};
+
+exports.followUser = async (userId, targetId) => {
+  if (userId === targetId) {
+    throw new AppError('Cannot follow yourself.', 400, ERROR_CODES.FORBIDDEN);
+  }
+  const user = await User.findById(userId);
+  const target = await User.findById(targetId);
+
+  if (!user || !target) {
+    throw new AppError('User not found.', 404, ERROR_CODES.NOT_FOUND);
+  }
+
+  if (user.following.includes(targetId)) {
+    throw new AppError('Already following this user.', 409, ERROR_CODES.DUPLICATE);
+  }
+  
+  user.following.push(targetId);
+  target.followers.push(userId);
+
+  await user.save();
+  await target.save();
+
+  userLogger.logUserFollowed(userId, targetId);
+  return user;
+};
+
+exports.unfollowUser = async (userId, targetId) => {
+  if (userId === targetId) {
+    throw new AppError('Cannot unfollow yourself.', 400, ERROR_CODES.FORBIDDEN);
+  }
+  const user = await User.findById(userId);
+  const target = await User.findById(targetId);
+  if (!user || !target) {
+    throw new AppError('User not found.', 404, ERROR_CODES.NOT_FOUND);
+  }
+  user.following = user.following.filter(id => id.toString() !== targetId);
+  target.followers = target.followers.filter(id => id.toString() !== userId);
+  
+  await user.save();
+  await target.save();
+
+  userLogger.logUserUnfollowed(userId, targetId);
+  return user;
+};
+
+exports.getFollowers = async (userId) => {
+  const user = await User.findById(userId).populate('followers', 'name email avatarUrl githubUrl');
+  if (!user) {
+    throw new AppError('User not found.', 404, ERROR_CODES.NOT_FOUND);
+  }
+  return user.followers;
+};
+
+exports.getFollowing = async (userId) => {
+  const user = await User.findById(userId).populate('following', 'name email avatarUrl githubUrl');
+  if (!user) {
+    throw new AppError('User not found.', 404, ERROR_CODES.NOT_FOUND);
+  }
+  return user.following;
 };
 
 exports.removeSkills = async (userId, skills) => {

@@ -54,3 +54,31 @@ exports.removeSkills = asyncHandler(async (req, res) => {
   const { user, count } = await userService.removeSkills(req.params.id, req.body.skills);
   res.status(200).json({ message: `${count} skill(s) removed successfully.`, user });
 });
+
+// Follow a user
+exports.followUser = asyncHandler(async (req, res) => {
+  const userId = req.body;
+  const targetId = req.params.targetId;
+  await userService.followUser(userId, targetId);
+  res.status(200).json({ message: 'Followed user successfully.' });
+});
+
+// Unfollow a user
+exports.unfollowUser = asyncHandler(async (req, res) => {
+  const userId = req.body;
+  const targetId = req.params.targetId;
+  await userService.unfollowUser(userId, targetId);
+  res.status(200).json({ message: 'Unfollowed user successfully.' });
+});
+
+// Get followers of a user
+exports.getFollowers = asyncHandler(async (req, res) => {
+  const followers = await userService.getFollowers(req.params.userId);
+  res.status(200).json({ count: followers.length, followers });
+});
+
+// Get following of a user
+exports.getFollowing = asyncHandler(async (req, res) => {
+  const following = await userService.getFollowing(req.params.userId);
+  res.status(200).json({ count: following.length, following });
+});

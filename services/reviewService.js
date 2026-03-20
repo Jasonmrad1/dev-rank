@@ -67,17 +67,14 @@ exports.createReview = async (data) => {
         throw new AppError("Only verified reviewers can submit reviews.", 403, ERROR_CODES.FORBIDDEN);
     }
 
-    //prevent user from reviewing their own project
     if (existingProject.owner.toString() === reviewer.toString()) {
         throw new AppError("Project owners cannot review their own projects.", 403, ERROR_CODES.FORBIDDEN);
     }
 
-    //Reviewer can review project once
     const alreadyReviewed = await Review.findOne({ project, reviewer });
     if (alreadyReviewed) {
         throw new AppError("This reviewer has already reviewed this project.", 409, ERROR_CODES.DUPLICATE);
     }
-
 
     const review = await Review.create({
         project,
@@ -95,14 +92,7 @@ exports.createReview = async (data) => {
     await recalculateProjectAggregates(project);
     await recalculateUserProfileScore(existingProject.owner);
 
-    //implement activityLog
-    reviewLogger.logReviewCreated(
-      existingReviewer._id.toString(),
-      review._id.toString(),
-      project.toString(),
-      overallRating,
-      status
-    );
+    reviewLogger.logReviewCreated(existingReviewer._id.toString(), review._id.toString(), project.toString(), overallRating, status);
 
     return await review.populate([
         { path: "project", select: "title status" },
@@ -164,13 +154,7 @@ exports.updateReview = async (id, data) => {
         .populate("project", "title status")
         .populate("reviewer", "name email role githubUrl");
 
-    //Implement log for update Review
-    reviewLogger.logReviewUpdated(
-      populatedReview.reviewer._id.toString(),
-      review._id.toString(),
-      review.project.toString(),
-      review.status
-    );
+    reviewLogger.logReviewUpdated(populatedReview.reviewer._id.toString(), review._id.toString(), review.project.toString(), review.status);
 
     return populatedReview;
 };
@@ -191,11 +175,7 @@ exports.deleteReview = async (id) => {
         await recalculateUserProfileScore(affectedProject.owner);
     }
 
-    reviewLogger.logReviewDeleted(
-      review.reviewer._id.toString(),
-      review._id.toString(),
-      review.project.toString()
-    );
+    reviewLogger.logReviewDeleted(review.reviewer._id.toString(), review._id.toString(), review.project.toString());
 
     return { message: "Review deleted successfully." };
 };

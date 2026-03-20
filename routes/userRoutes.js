@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
-const {validateRegister, validateUpdateUser, validateAddSkills, validateRemoveSkills} = require("../middleware/validators/userValidators");
+const {validateRegister, validateUpdateUser, validateAddSkills, validateRemoveSkills, validateFollowTarget, validateUserIdParam, validateFollowRequest,} = require("../middleware/validators/userValidators");
 
 // POST /api/users/register - Register a new user
 router.post("/register", validateRegister, userController.register);
@@ -29,5 +29,17 @@ router.delete("/:id/skills/:skill", userController.removeSkill);
 
 // DELETE /api/users/:id/skills - Remove multiple skills (body: { skills: [...] })
 router.delete("/:id/skills", validateRemoveSkills, userController.removeSkills);
+
+// POST /api/users/follow/:targetId - Follow a user (body: { userId })
+router.post("/follow/:targetId", validateFollowRequest, validateFollowTarget, userController.followUser);
+
+// POST /api/users/unfollow/:targetId - Unfollow a user (body: { userId })
+router.post("/unfollow/:targetId", validateFollowRequest, validateFollowTarget, userController.unfollowUser);
+
+// GET /api/users/:userId/followers - Get followers
+router.get("/:userId/followers", validateUserIdParam, userController.getFollowers);
+
+// GET /api/users/:userId/following - Get following
+router.get("/:userId/following", validateUserIdParam, userController.getFollowing);
 
 module.exports = router;

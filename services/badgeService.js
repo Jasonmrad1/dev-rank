@@ -87,7 +87,6 @@ exports.deleteBadge = async (id) => {
   // Remove badge from all users that have it
   await User.updateMany({ badges: id }, { $pull: { badges: id } });
 
-  // Delete the badge
   await Badge.findByIdAndDelete(id);
 };
 
@@ -131,7 +130,6 @@ exports.deleteBadgeByName = async (name) => {
   // Remove badge from all users that have it
   await User.updateMany({ badges: badge._id }, { $pull: { badges: badge._id } });
 
-  // Delete the badge
   await Badge.findByIdAndDelete(badge._id);
 };
 

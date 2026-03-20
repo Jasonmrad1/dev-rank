@@ -11,12 +11,16 @@ const certificationRoutes = require("./routes/certificationRoutes");
 const badgeRoutes = require("./routes/badgeRoutes");
 const activityLogRoutes = require("./routes/activityLogRoutes");
 const { registerEventListeners } = require("./listeners/registerEventListeners");
+const { swaggerUi, swaggerDocument } = require("./docs/swagger.config.js");
 
 const app = express();
 //middleware
 app.use(express.json());
 
 registerEventListeners();
+
+// Swagger/OpenAPI documentation
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Mount routes
 app.use("/api/users", userRoutes);

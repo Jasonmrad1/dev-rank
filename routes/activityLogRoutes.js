@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const activityLogController = require("../controllers/activityLogController");
+const {validateGetAllLogsQuery} = require("../middleware/validators/activityLogValidators");
 
 // GET /api/logs - Get all activity logs
-router.get("/", activityLogController.getAllLogs);
+router.get("/", validateGetAllLogsQuery, activityLogController.getAllLogs);
 
 // GET /api/logs/user/:userId - Get logs by user id
 router.get("/user/:userId", activityLogController.getLogsByUser);

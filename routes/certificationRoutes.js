@@ -9,10 +9,10 @@ router.post("/apply", validateCreateCertificationRequest, certificationControlle
 // GET /api/certifications - Get all certification requests
 router.get("/", certificationController.getAllRequests);
 
-// PATCH /api/certifications/:id/approve - Approve certification
-router.patch("/:id/approve", validateUpdateCertificationRequest, certificationController.approve);
+// PATCH /api/certifications/:certificationRequestId/approve - Approve certification
+router.patch("/:certificationRequestId/approve", validateUpdateCertificationRequest, certificationController.approve);
 
-// PATCH /api/certifications/:id/reject - Reject certification
-router.patch("/:id/reject", validateUpdateCertificationRequest, certificationController.reject);
+// PATCH /api/certifications/:certificationRequestId/reject - Reject certification
+router.patch("/:certificationRequestId/reject", validateUpdateCertificationRequest, certificationController.reject);
 
 module.exports = router;

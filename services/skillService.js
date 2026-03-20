@@ -18,8 +18,8 @@ exports.getAllSkills = async ({ category, preset }) => {
   return await Skill.find(filter).sort({ isPreset: -1, name: 1 });
 };
 
-exports.getSkill = async (id) => {
-  const skill = await Skill.findById(id).populate("users", "name email avatarUrl");
+exports.getSkill = async (skillId) => {
+  const skill = await Skill.findById(skillId).populate("users", "name email avatarUrl");
   if (!skill) {
     throw new AppError("Skill not found.", 404, ERROR_CODES.NOT_FOUND);
   }
@@ -38,11 +38,11 @@ exports.getSkillByName = async (name) => {
   return skill;
 };
 
-exports.updateSkill = async (id, { name, category, isPreset }) => {
+exports.updateSkill = async (skillId, { name, category, isPreset }) => {
   if (name) {
     const existing = await Skill.findOne({
       name: { $regex: `^${name}$`, $options: "i" },
-      _id: { $ne: id },
+      _id: { $ne: skillId },
     });
 
     if (existing) {
@@ -51,7 +51,7 @@ exports.updateSkill = async (id, { name, category, isPreset }) => {
   }
 
   const skill = await Skill.findByIdAndUpdate(
-    id,
+    skillId,
     { name, category, isPreset },
     { returnDocument: "after", runValidators: true }
   );
@@ -71,8 +71,8 @@ async function cleanupSkillData(skillId) {
   );
 }
 
-exports.deleteSkill = async (id) => {
-  const skill = await Skill.findByIdAndDelete(id);
+exports.deleteSkill = async (skillId) => {
+  const skill = await Skill.findByIdAndDelete(skillId);
   if (!skill) {
     throw new AppError("Skill not found.", 404, ERROR_CODES.NOT_FOUND);
   }

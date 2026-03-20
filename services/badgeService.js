@@ -25,8 +25,8 @@ exports.getAllBadges = async ({ category, isActive }) => {
   return await Badge.find(filter).sort({ createdAt: -1 });
 };
 
-exports.getBadge = async (id) => {
-  const badge = await Badge.findById(id).populate("users", "name email avatarUrl");
+exports.getBadge = async (badgeId) => {
+  const badge = await Badge.findById(badgeId).populate("users", "name email avatarUrl");
   if (!badge) {
     throw new AppError("Badge not found.", 404, ERROR_CODES.NOT_FOUND);
   }
@@ -45,11 +45,11 @@ exports.getBadgeByName = async (name) => {
   return badge;
 };
 
-exports.updateBadge = async (id, { name, description, icon, category, criteria, isActive }) => {
+exports.updateBadge = async (badgeId, { name, description, icon, category, criteria, isActive }) => {
   if (name) {
     const existing = await Badge.findOne({
       name: { $regex: `^${name}$`, $options: "i" },
-      _id: { $ne: id },
+      _id: { $ne: badgeId },
     });
 
     if (existing) {
@@ -58,7 +58,7 @@ exports.updateBadge = async (id, { name, description, icon, category, criteria, 
   }
 
   const badge = await Badge.findByIdAndUpdate(
-    id,
+    badgeId,
     {
       name,
       description,
@@ -78,16 +78,16 @@ exports.updateBadge = async (id, { name, description, icon, category, criteria, 
   return badge;
 };
 
-exports.deleteBadge = async (id) => {
-  const badge = await Badge.findById(id);
+exports.deleteBadge = async (badgeId) => {
+  const badge = await Badge.findById(badgeId);
   if (!badge) {
     throw new AppError("Badge not found.", 404, ERROR_CODES.NOT_FOUND);
   }
 
   // Remove badge from all users that have it
-  await User.updateMany({ badges: id }, { $pull: { badges: id } });
+  await User.updateMany({ badges: badgeId }, { $pull: { badges: badgeId } });
 
-  await Badge.findByIdAndDelete(id);
+  await Badge.findByIdAndDelete(badgeId);
 };
 
 exports.updateBadgeByName = async (name, { name: newName, description, icon, category, criteria, isActive }) => {
@@ -131,50 +131,4 @@ exports.deleteBadgeByName = async (name) => {
   await User.updateMany({ badges: badge._id }, { $pull: { badges: badge._id } });
 
   await Badge.findByIdAndDelete(badge._id);
-};
-
-exports.awardBadgeToUser = async (userId, badgeId) => {
-  const user = await User.findById(userId);
-  if (!user) {
-    throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
-  }
-
-  const badge = await Badge.findById(badgeId);
-  if (!badge) {
-    throw new AppError("Badge not found.", 404, ERROR_CODES.NOT_FOUND);
-  }
-
-  if (user.badges && user.badges.includes(badgeId)) {
-    throw new AppError("User already has this badge.", 409, ERROR_CODES.DUPLICATE);
-  }
-
-  await User.findByIdAndUpdate(userId, { $push: { badges: badgeId } });
-  await Badge.findByIdAndUpdate(badgeId, { $push: { users: userId } });
-
-  return { message: "Badge awarded successfully." };
-};
-
-exports.removeBadgeFromUser = async (userId, badgeId) => {
-  const user = await User.findById(userId);
-  if (!user) {
-    throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
-  }
-
-  const badge = await Badge.findById(badgeId);
-  if (!badge) {
-    throw new AppError("Badge not found.", 404, ERROR_CODES.NOT_FOUND);
-  }
-
-  await User.findByIdAndUpdate(userId, { $pull: { badges: badgeId } });
-  await Badge.findByIdAndUpdate(badgeId, { $pull: { users: userId } });
-
-  return { message: "Badge removed successfully." };
-};
-
-exports.getUserBadges = async (userId) => {
-  const user = await User.findById(userId).populate("badges");
-  if (!user) {
-    throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
-  }
-  return user.badges || [];
 };

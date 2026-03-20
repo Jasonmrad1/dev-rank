@@ -6,7 +6,7 @@ const AppError = require("../utils/AppError");
 const ERROR_CODES = require("../utils/errorCodes");
 
 const recalculateUserProfileScore = async (userId) => {
-    const ownedProjects = await Project.find({ owner: userId });
+    const ownedProjects = await Project.find({ userId });
 
     if (ownedProjects.length === 0) {
         await User.findByIdAndUpdate(userId, { profileScore: 0 });
@@ -34,15 +34,15 @@ const recalculateUserProfileScore = async (userId) => {
 exports.recalculateUserProfileScore = recalculateUserProfileScore;
 
 exports.createProject = async (data) => {
-    const { owner, title, description, repoUrl, liveUrl, techStack, status } = data;
+    const { userId, title, description, repoUrl, liveUrl, techStack, status } = data;
 
-    const ownerUser = await User.findById(owner);
+    const ownerUser = await User.findById(userId);
     if (!ownerUser) {
-        throw new AppError("Owner user not found.", 404, ERROR_CODES.NOT_FOUND);
+        throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
     }
 
     const project = await Project.create({
-        owner,
+        userId,
         title,
         description,
         repoUrl,
@@ -53,18 +53,22 @@ exports.createProject = async (data) => {
 
     projectLogger.logProjectCreated(ownerUser._id.toString(), project._id.toString(), project.title, project.status);
 
-    return await project.populate("owner", "name email role githubUrl");
+    return await project.populate("userId", "name email role githubUrl");
 };
 
 exports.getAllProjects = async (filters = {}) => {
     const query = {};
 
-    if (filters.status) {
-        query.status = filters.status;
+    if (filters.userId) {
+        const userExists = await User.findById(filters.userId);
+        if (!userExists) {
+            throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
+        }
+        query.userId = filters.userId;
     }
 
-    if (filters.owner) {
-        query.owner = filters.owner;
+    if (filters.status) {
+        query.status = filters.status;
     }
 
     if (filters.techStack) {
@@ -75,13 +79,13 @@ exports.getAllProjects = async (filters = {}) => {
     }
 
     return await Project.find(query)
-        .populate("owner", "name email role githubUrl")
+        .populate("userId", "name email role githubUrl")
         .sort({ createdAt: -1 });
 };
 
-exports.getProject = async (id) => {
-    const project = await Project.findById(id).populate(
-        "owner",
+exports.getProject = async (projectId) => {
+    const project = await Project.findById(projectId).populate(
+        "userId",
         "name email role githubUrl"
     );
 
@@ -92,9 +96,9 @@ exports.getProject = async (id) => {
     return project;
 };
 
-exports.updateProject = async (id, data) => {
+exports.updateProject = async (projectId, data) => {
     const project = await Project.findByIdAndUpdate(
-        id,
+        projectId,
         {
             title: data.title,
             description: data.description,
@@ -104,13 +108,13 @@ exports.updateProject = async (id, data) => {
             status: data.status,
         },
         { new: true, runValidators: true }
-    ).populate("owner", "name email role githubUrl");
+    ).populate("userId", "name email role githubUrl");
 
     if (!project) {
         throw new AppError("Project not found.", 404, ERROR_CODES.NOT_FOUND);
     }
 
-    projectLogger.logProjectUpdated(project.owner._id.toString(), project._id.toString(), project.title, project.status);
+    projectLogger.logProjectUpdated(project.userId._id.toString(), project._id.toString(), project.title, project.status);
 
     return project;
 };
@@ -121,28 +125,28 @@ async function cleanupProjectData(project) {
     await Project.findByIdAndDelete(project._id);
     // Delete related reviews
     await Review.deleteMany({ project: project._id });
-    // Recalculate owner's profile score directly
-    await recalculateUserProfileScore(project.owner._id);
+    // Recalculate user's profile score directly
+    await recalculateUserProfileScore(project.userId);
 }
 
-exports.deleteProject = async (id) => {
-    const project = await Project.findById(id).populate("owner", "email");
+exports.deleteProject = async (projectId) => {
+    const project = await Project.findById(projectId).populate("userId", "email");
     if (!project) {
         throw new AppError("Project not found.", 404, ERROR_CODES.NOT_FOUND);
     }
     await cleanupProjectData(project);
 
-    projectLogger.logProjectDeleted(project.owner._id.toString(), project._id.toString(), project.title);
+    projectLogger.logProjectDeleted(project.userId._id.toString(), project._id.toString(), project.title);
     return { message: "Project deleted successfully." };
 };
 
-exports.getProjectReviews = async (id) => {
-    const project = await Project.findById(id);
+exports.getProjectReviews = async (projectId) => {
+    const project = await Project.findById(projectId);
     if (!project) {
         throw new AppError("Project not found.", 404, ERROR_CODES.NOT_FOUND);
     }
 
-    return await Review.find({ project: id })
+    return await Review.find({ project: projectId })
         .populate("reviewer", "name email role githubUrl")
         .populate("project", "title status")
         .sort({ createdAt: -1 });
@@ -150,7 +154,7 @@ exports.getProjectReviews = async (id) => {
 
 exports.getProjectByTitle = async (title) => {
     const project = await Project.findOne({ title })
-        .populate("owner", "name email role githubUrl");
+        .populate("userId", "name email role githubUrl");
 
     if (!project) {
         throw new AppError("Project not found.", 404, ERROR_CODES.NOT_FOUND);
@@ -165,7 +169,7 @@ exports.getProjectsByUser = async (userId) => {
         throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
     }
 
-    return await Project.find({ owner: userId })
-        .populate("owner", "name email role githubUrl")
+    return await Project.find({ userId })
+        .populate("userId", "name email role githubUrl")
         .sort({ createdAt: -1 });
 };

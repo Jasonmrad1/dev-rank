@@ -15,18 +15,18 @@ exports.getAllReviews = asyncHandler(async (req, res) => {
 
 // Get review by ID
 exports.getReview = asyncHandler(async (req, res) => {
-  const review = await reviewService.getReview(req.params.id);
+  const review = await reviewService.getReview(req.params.reviewId);
   res.status(200).json({ review });
 });
 
 // Update review
 exports.updateReview = asyncHandler(async (req, res) => {
-  const review = await reviewService.updateReview(req.params.id, req.body);
+  const review = await reviewService.updateReview(req.params.reviewId, req.body);
   res.status(200).json({ message: "Review updated successfully.", review });
 });
 
 // Delete review
 exports.deleteReview = asyncHandler(async (req, res) => {
-  const result = await reviewService.deleteReview(req.params.id);
+  const result = await reviewService.deleteReview(req.params.reviewId);
   res.status(200).json(result);
 });

@@ -1,4 +1,4 @@
-const { body, validationResult } = require("express-validator");
+const { body, query, validationResult } = require("express-validator");
 
 // Middleware to handle validation errors
 const handleValidationErrors = (req, res, next) => {
@@ -16,14 +16,48 @@ const handleValidationErrors = (req, res, next) => {
   next();
 };
 
+// Get all projects query validator
+exports.validateGetAllProjectsQuery = [
+  query("userId")
+    .optional()
+    .isMongoId()
+    .withMessage("userId must be a valid MongoDB ID"),
+  query("status")
+    .optional()
+    .isIn(["draft", "seeking-review", "under-review", "reviewed", "completed"])
+    .withMessage("status must be one of: draft, seeking-review, under-review, reviewed, completed"),
+  query("techStack")
+    .optional()
+    .isString()
+    .withMessage("techStack must be a string"),
+  (req, res, next) => {
+    const validParams = ["userId", "status", "techStack"];
+    const invalidParams = Object.keys(req.query).filter(
+      (param) => !validParams.includes(param)
+    );
+    if (invalidParams.length > 0) {
+      return res.status(400).json({
+        error: "Validation failed",
+        errorCode: "ERR_VALIDATION",
+        errors: invalidParams.map((param) => ({
+          field: param,
+          message: `Unknown parameter`,
+        })),
+      });
+    }
+    next();
+  },
+  handleValidationErrors,
+];
+
 // Create project validator
 exports.validateCreateProject = [
-  body("owner")
+  body("userId")
     .trim()
     .notEmpty()
-    .withMessage("Owner ID is required")
+    .withMessage("User ID is required")
     .isMongoId()
-    .withMessage("Owner must be a valid MongoDB ID"),
+    .withMessage("User ID must be a valid MongoDB ID"),
   body("title")
     .trim()
     .notEmpty()
@@ -55,8 +89,8 @@ exports.validateCreateProject = [
     .notEmpty()
     .withMessage("Each tech stack item must be a non-empty string"),
   body("status")
-    .isIn(["draft", "seeking-review", "in-review", "completed"])
-    .withMessage("Status must be one of: draft, seeking-review, in-review, completed"),
+    .isIn(["draft", "seeking-review", "under-review", "completed"])
+    .withMessage("Status must be one of: draft, seeking-review, under-review, completed"),
   handleValidationErrors,
 ];
 
@@ -96,7 +130,7 @@ exports.validateUpdateProject = [
     .withMessage("Each tech stack item must be a non-empty string"),
   body("status")
     .optional()
-    .isIn(["draft", "seeking-review", "in-review", "completed"])
-    .withMessage("Status must be one of: draft, seeking-review, in-review, completed"),
+    .isIn(["draft", "seeking-review", "under-review", "completed"])
+    .withMessage("Status must be one of: draft, seeking-review, under-review, completed"),
   handleValidationErrors,
 ];

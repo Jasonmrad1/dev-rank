@@ -41,8 +41,8 @@ const recalculateProjectAggregates = async (projectId) => {
 
 exports.createReview = async (data) => {
     const {
-        project,
-        reviewer,
+        projectId,
+        reviewerId,
         overallRating,
         codeQualityScore,
         creativityScore,
@@ -53,12 +53,12 @@ exports.createReview = async (data) => {
         status,
     } = data;
 
-    const existingProject = await Project.findById(project);
+    const existingProject = await Project.findById(projectId);
     if (!existingProject) {
         throw new AppError("Project not found.", 404, ERROR_CODES.NOT_FOUND);
     }
 
-    const existingReviewer = await User.findById(reviewer);
+    const existingReviewer = await User.findById(reviewerId);
     if (!existingReviewer) {
         throw new AppError("Reviewer user not found.", 404, ERROR_CODES.NOT_FOUND);
     }
@@ -67,18 +67,18 @@ exports.createReview = async (data) => {
         throw new AppError("Only verified reviewers can submit reviews.", 403, ERROR_CODES.FORBIDDEN);
     }
 
-    if (existingProject.owner.toString() === reviewer.toString()) {
+    if (existingProject.userId.toString() === reviewerId.toString()) {
         throw new AppError("Project owners cannot review their own projects.", 403, ERROR_CODES.FORBIDDEN);
     }
 
-    const alreadyReviewed = await Review.findOne({ project, reviewer });
+    const alreadyReviewed = await Review.findOne({ project: projectId, reviewer: reviewerId });
     if (alreadyReviewed) {
         throw new AppError("This reviewer has already reviewed this project.", 409, ERROR_CODES.DUPLICATE);
     }
 
     const review = await Review.create({
-        project,
-        reviewer,
+        project: projectId,
+        reviewer: reviewerId,
         overallRating,
         codeQualityScore,
         creativityScore,
@@ -89,10 +89,10 @@ exports.createReview = async (data) => {
         status,
     });
 
-    await recalculateProjectAggregates(project);
-    await recalculateUserProfileScore(existingProject.owner);
+    await recalculateProjectAggregates(projectId);
+    await recalculateUserProfileScore(existingProject.userId);
 
-    reviewLogger.logReviewCreated(existingReviewer._id.toString(), review._id.toString(), project.toString(), overallRating, status);
+    reviewLogger.logReviewCreated(existingReviewer._id.toString(), review._id.toString(), projectId.toString(), overallRating, status);
 
     return await review.populate([
         { path: "project", select: "title status" },
@@ -103,8 +103,8 @@ exports.createReview = async (data) => {
 exports.getAllReviews = async (filters = {}) => {
     const query = {};
 
-    if (filters.project) query.project = filters.project;
-    if (filters.reviewer) query.reviewer = filters.reviewer;
+    if (filters.projectId) query.project = filters.projectId;
+    if (filters.reviewerId) query.reviewer = filters.reviewerId;
     if (filters.status) query.status = filters.status;
 
     return await Review.find(query)
@@ -113,8 +113,8 @@ exports.getAllReviews = async (filters = {}) => {
         .sort({ createdAt: -1 });
 };
 
-exports.getReview = async (id) => {
-    const review = await Review.findById(id)
+exports.getReview = async (reviewId) => {
+    const review = await Review.findById(reviewId)
         .populate("project", "title status")
         .populate("reviewer", "name email role githubUrl");
 
@@ -125,9 +125,9 @@ exports.getReview = async (id) => {
     return review;
 };
 
-exports.updateReview = async (id, data) => {
+exports.updateReview = async (reviewId, data) => {
     const review = await Review.findByIdAndUpdate(
-        id,
+        reviewId,
         {
             overallRating: data.overallRating,
             codeQualityScore: data.codeQualityScore,
@@ -148,7 +148,7 @@ exports.updateReview = async (id, data) => {
     await recalculateProjectAggregates(review.project);
 
     const updatedProject = await Project.findById(review.project);
-    await recalculateUserProfileScore(updatedProject.owner);
+    await recalculateUserProfileScore(updatedProject.userId);
 
     const populatedReview = await Review.findById(review._id)
         .populate("project", "title status")
@@ -159,20 +159,20 @@ exports.updateReview = async (id, data) => {
     return populatedReview;
 };
 
-exports.deleteReview = async (id) => {
-    const review = await Review.findById(id).populate("reviewer", "email");
+exports.deleteReview = async (reviewId) => {
+    const review = await Review.findById(reviewId).populate("reviewer", "email");
 
     if (!review) {
         throw new AppError("Review not found.", 404, ERROR_CODES.NOT_FOUND);
     }
 
-    await Review.findByIdAndDelete(id);
+    await Review.findByIdAndDelete(reviewId);
 
     await recalculateProjectAggregates(review.project);
 
     const affectedProject = await Project.findById(review.project);
     if (affectedProject) {
-        await recalculateUserProfileScore(affectedProject.owner);
+        await recalculateUserProfileScore(affectedProject.userId);
     }
 
     reviewLogger.logReviewDeleted(review.reviewer._id.toString(), review._id.toString(), review.project.toString());

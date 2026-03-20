@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/mongo/User");
 const Skill = require("../models/mongo/Skill");
+const Badge = require("../models/mongo/Badge");
 const userLogger = require("../loggers/userLogger");
 const AppError = require("../utils/AppError");
 const ERROR_CODES = require("../utils/errorCodes");
@@ -62,7 +63,7 @@ exports.updateUser = async (id, { name, bio, githubUrl, avatarUrl }) => {
 
 async function cleanupUserData(user) {
   // Delete projects and reviews
-  await Project.deleteMany({ owner: user._id });
+  await Project.deleteMany({ userId: user._id });
   await Review.deleteMany({ reviewer: user._id });
   // Remove from skills
   await Skill.updateMany(
@@ -254,4 +255,100 @@ exports.removeSkills = async (userId, skills) => {
   userLogger.logUserSkillsRemoved(user._id.toString(), inputs, removableIds.length);
 
   return { user, count: removableIds.length };
+};
+
+exports.awardBadge = async (userId, badgeId) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
+  }
+
+  const badge = await Badge.findById(badgeId);
+  if (!badge) {
+    throw new AppError("Badge not found.", 404, ERROR_CODES.NOT_FOUND);
+  }
+
+  if (user.badges && user.badges.includes(badgeId)) {
+    throw new AppError("User already has this badge.", 409, ERROR_CODES.DUPLICATE);
+  }
+
+  user.badges.push(badgeId);
+  await user.save();
+
+  await Badge.findByIdAndUpdate(badgeId, { $addToSet: { users: user._id } });
+  await user.populate("badges");
+
+  return user;
+};
+
+exports.removeBadge = async (userId, badgeId) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
+  }
+
+  const badge = await Badge.findById(badgeId);
+  if (!badge) {
+    throw new AppError("Badge not found.", 404, ERROR_CODES.NOT_FOUND);
+  }
+
+  if (!user.badges || !user.badges.includes(badgeId)) {
+    throw new AppError("User does not have this badge.", 404, ERROR_CODES.NOT_FOUND);
+  }
+
+  user.badges = user.badges.filter((b) => b.toString() !== badgeId.toString());
+  await user.save();
+
+  await Badge.findByIdAndUpdate(badgeId, { $pull: { users: user._id } });
+  await user.populate("badges");
+
+  return user;
+};
+
+exports.awardBadgeByName = async (userId, badgeName) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
+  }
+
+  const badge = await Badge.findOne({ name: { $regex: `^${badgeName}$`, $options: "i" } });
+  if (!badge) {
+    throw new AppError("Badge not found.", 404, ERROR_CODES.NOT_FOUND);
+  }
+
+  if (user.badges && user.badges.includes(badge._id)) {
+    throw new AppError("User already has this badge.", 409, ERROR_CODES.DUPLICATE);
+  }
+
+  user.badges.push(badge._id);
+  await user.save();
+
+  await Badge.findByIdAndUpdate(badge._id, { $addToSet: { users: user._id } });
+  await user.populate("badges");
+
+  return user;
+};
+
+exports.removeBadgeByName = async (userId, badgeName) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
+  }
+
+  const badge = await Badge.findOne({ name: { $regex: `^${badgeName}$`, $options: "i" } });
+  if (!badge) {
+    throw new AppError("Badge not found.", 404, ERROR_CODES.NOT_FOUND);
+  }
+
+  if (!user.badges || !user.badges.includes(badge._id)) {
+    throw new AppError("User does not have this badge.", 404, ERROR_CODES.NOT_FOUND);
+  }
+
+  user.badges = user.badges.filter((b) => b.toString() !== badge._id.toString());
+  await user.save();
+
+  await Badge.findByIdAndUpdate(badge._id, { $pull: { users: user._id } });
+  await user.populate("badges");
+
+  return user;
 };

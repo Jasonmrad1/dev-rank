@@ -15,7 +15,7 @@ exports.getAllSkills = asyncHandler(async (req, res) => {
 
 // Get skill by ID
 exports.getSkill = asyncHandler(async (req, res) => {
-  const skill = await skillService.getSkill(req.params.id);
+  const skill = await skillService.getSkill(req.params.skillId);
   res.status(200).json({ skill });
 });
 
@@ -27,13 +27,13 @@ exports.getSkillByName = asyncHandler(async (req, res) => {
 
 // Update skill
 exports.updateSkill = asyncHandler(async (req, res) => {
-  const skill = await skillService.updateSkill(req.params.id, req.body);
+  const skill = await skillService.updateSkill(req.params.skillId, req.body);
   res.status(200).json({ message: "Skill updated successfully.", skill });
 });
 
 // Delete skill
 exports.deleteSkill = asyncHandler(async (req, res) => {
-  await skillService.deleteSkill(req.params.id);
+  await skillService.deleteSkill(req.params.skillId);
   res.status(200).json({ message: "Skill deleted successfully." });
 });
 

@@ -5,20 +5,20 @@ const AppError = require("../utils/AppError");
 const ERROR_CODES = require("../utils/errorCodes");
 
 exports.apply = async (data) => {
-  const { user, cvUrl, experience, motivation, techExpertise } = data;
+  const { userId, cvUrl, experience, motivation, techExpertise } = data;
 
-  const existingUser = await User.findById(user);
+  const existingUser = await User.findById(userId);
   if (!existingUser) {
     throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
   }
 
-  const existing = await CertificationRequest.findOne({ user, status: "pending" });
+  const existing = await CertificationRequest.findOne({ userId, status: "pending" });
   if (existing) {
     throw new AppError("User already has a pending certification request.", 409, ERROR_CODES.DUPLICATE);
   }
 
   const request = await CertificationRequest.create({
-    user,
+    userId,
     cvUrl,
     experience,
     motivation,
@@ -36,8 +36,8 @@ exports.getAllRequests = async () => {
   return await CertificationRequest.find().populate("user", "name email role reviewerStatus isVerifiedReviewer");
 };
 
-exports.approve = async (id, adminNotes) => {
-  const request = await CertificationRequest.findById(id);
+exports.approve = async (certificationRequestId, adminNotes) => {
+  const request = await CertificationRequest.findById(certificationRequestId);
   if (!request) {
     throw new AppError("Certification request not found.", 404, ERROR_CODES.NOT_FOUND);
   }
@@ -62,8 +62,8 @@ exports.approve = async (id, adminNotes) => {
   return request;
 };
 
-exports.reject = async (id, adminNotes) => {
-  const request = await CertificationRequest.findById(id);
+exports.reject = async (certificationRequestId, adminNotes) => {
+  const request = await CertificationRequest.findById(certificationRequestId);
   if (!request) {
     throw new AppError("Certification request not found.", 404, ERROR_CODES.NOT_FOUND);
   }

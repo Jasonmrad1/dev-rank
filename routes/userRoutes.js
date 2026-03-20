@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
-const {validateRegister, validateUpdateUser, validateAddSkills, validateRemoveSkills, validateFollowTarget, validateUserIdParam, validateFollowRequest,} = require("../middleware/validators/userValidators");
+const {validateRegister, validateUpdateUser, validateAddSkills, validateRemoveSkills, validateFollowTarget, validateUserIdParam, validateFollowRequest, validateAwardBadge, validateAwardBadgeByName,} = require("../middleware/validators/userValidators");
 
 // POST /api/users/register - Register a new user
 router.post("/register", validateRegister, userController.register);
@@ -29,6 +29,18 @@ router.delete("/:id/skills/:skill", userController.removeSkill);
 
 // DELETE /api/users/:id/skills - Remove multiple skills (body: { skills: [...] })
 router.delete("/:id/skills", validateRemoveSkills, userController.removeSkills);
+
+// POST /api/users/:id/badges - Award a badge to user (body: { badgeId })
+router.post("/:id/badges", validateAwardBadge, userController.awardBadge);
+
+// POST /api/users/:id/badges/name - Award a badge to user by name (body: { badgeName })
+router.post("/:id/badges/name", validateAwardBadgeByName, userController.awardBadgeByName);
+
+// DELETE /api/users/:id/badges/:badgeId - Remove a badge from user by ID
+router.delete("/:id/badges/:badgeId", userController.removeBadge);
+
+// DELETE /api/users/:id/badges/name/:badgeName - Remove a badge from user by name
+router.delete("/:id/badges/name/:badgeName", userController.removeBadgeByName);
 
 // POST /api/users/follow/:targetId - Follow a user (body: { userId })
 router.post("/follow/:targetId", validateFollowRequest, validateFollowTarget, userController.followUser);

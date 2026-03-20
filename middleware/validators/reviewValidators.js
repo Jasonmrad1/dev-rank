@@ -1,4 +1,4 @@
-const { body, validationResult } = require("express-validator");
+const { body, query, validationResult } = require("express-validator");
 
 // Middleware to handle validation errors
 const handleValidationErrors = (req, res, next) => {
@@ -16,20 +16,54 @@ const handleValidationErrors = (req, res, next) => {
   next();
 };
 
+// Get all reviews query validator
+exports.validateGetAllReviewsQuery = [
+  query("projectId")
+    .optional()
+    .isMongoId()
+    .withMessage("projectId must be a valid MongoDB ID"),
+  query("reviewerId")
+    .optional()
+    .isMongoId()
+    .withMessage("reviewerId must be a valid MongoDB ID"),
+  query("status")
+    .optional()
+    .isIn(["published", "removed"])
+    .withMessage("status must be either 'published' or 'removed'"),
+  (req, res, next) => {
+    const validParams = ["projectId", "reviewerId", "status"];
+    const invalidParams = Object.keys(req.query).filter(
+      (param) => !validParams.includes(param)
+    );
+    if (invalidParams.length > 0) {
+      return res.status(400).json({
+        error: "Validation failed",
+        errorCode: "ERR_VALIDATION",
+        errors: invalidParams.map((param) => ({
+          field: param,
+          message: `Unknown parameter`,
+        })),
+      });
+    }
+    next();
+  },
+  handleValidationErrors,
+];
+
 // Create review validator
 exports.validateCreateReview = [
-  body("project")
+  body("projectId")
     .trim()
     .notEmpty()
     .withMessage("Project ID is required")
     .isMongoId()
-    .withMessage("Project must be a valid MongoDB ID"),
-  body("reviewer")
+    .withMessage("projectId must be a valid MongoDB ID"),
+  body("reviewerId")
     .trim()
     .notEmpty()
     .withMessage("Reviewer ID is required")
     .isMongoId()
-    .withMessage("Reviewer must be a valid MongoDB ID"),
+    .withMessage("reviewerId must be a valid MongoDB ID"),
   body("overallRating")
     .isInt({ min: 1, max: 5 })
     .withMessage("Overall rating must be between 1 and 5"),

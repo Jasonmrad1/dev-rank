@@ -55,9 +55,33 @@ exports.removeSkills = asyncHandler(async (req, res) => {
   res.status(200).json({ message: `${count} skill(s) removed successfully.`, user });
 });
 
+// Award a badge to user
+exports.awardBadge = asyncHandler(async (req, res) => {
+  const user = await userService.awardBadge(req.params.id, req.body.badgeId);
+  res.status(200).json({ message: "Badge awarded successfully.", user });
+});
+
+// Remove a badge from user by ID
+exports.removeBadge = asyncHandler(async (req, res) => {
+  const user = await userService.removeBadge(req.params.id, req.params.badgeId);
+  res.status(200).json({ message: "Badge removed successfully.", user });
+});
+
+// Award a badge to user by name
+exports.awardBadgeByName = asyncHandler(async (req, res) => {
+  const user = await userService.awardBadgeByName(req.params.id, req.body.badgeName);
+  res.status(200).json({ message: "Badge awarded successfully.", user });
+});
+
+// Remove a badge from user by name
+exports.removeBadgeByName = asyncHandler(async (req, res) => {
+  const user = await userService.removeBadgeByName(req.params.id, req.params.badgeName);
+  res.status(200).json({ message: "Badge removed successfully.", user });
+});
+
 // Follow a user
 exports.followUser = asyncHandler(async (req, res) => {
-  const userId = req.body;
+  const userId = req.body.userId;
   const targetId = req.params.targetId;
   await userService.followUser(userId, targetId);
   res.status(200).json({ message: 'Followed user successfully.' });
@@ -65,7 +89,7 @@ exports.followUser = asyncHandler(async (req, res) => {
 
 // Unfollow a user
 exports.unfollowUser = asyncHandler(async (req, res) => {
-  const userId = req.body;
+  const userId = req.body.userId;
   const targetId = req.params.targetId;
   await userService.unfollowUser(userId, targetId);
   res.status(200).json({ message: 'Unfollowed user successfully.' });

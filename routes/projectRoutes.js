@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const projectController = require("../controllers/projectController");
-const {validateCreateProject, validateUpdateProject} = require("../middleware/validators/projectValidators");
+const {validateCreateProject, validateUpdateProject, validateGetAllProjectsQuery} = require("../middleware/validators/projectValidators");
 
 // POST /api/projects - Create a new project
 router.post("/", validateCreateProject, projectController.createProject);
@@ -12,20 +12,20 @@ router.get("/title/:title", projectController.getProjectByTitle);
 // GET /api/projects/user/:userId - Get all projects by a specific user
 router.get("/user/:userId", projectController.getProjectsByUser);
 
-// GET /api/projects/:id/reviews - Get reviews for a project
-router.get("/:id/reviews", projectController.getProjectReviews);
+// GET /api/projects/:projectId/reviews - Get reviews for a project
+router.get("/:projectId/reviews", projectController.getProjectReviews);
 
-// GET /api/projects/:id - Get project by ID
-router.get("/:id", projectController.getProject);
+// GET /api/projects/:projectId - Get project by ID
+router.get("/:projectId", projectController.getProject);
 
-// PUT /api/projects/:id - Update project
-router.put("/:id", validateUpdateProject, projectController.updateProject);
+// PUT /api/projects/:projectId - Update project
+router.put("/:projectId", validateUpdateProject, projectController.updateProject);
 
-// DELETE /api/projects/:id - Delete project
-router.delete("/:id", projectController.deleteProject);
+// DELETE /api/projects/:projectId - Delete project
+router.delete("/:projectId", projectController.deleteProject);
 
-// GET /api/projects - Get all projects
-router.get("/", projectController.getAllProjects);
+// GET /api/projects - Get all projects (optional: by status or by userId or by techstack)
+router.get("/", validateGetAllProjectsQuery, projectController.getAllProjects);
 
 
 

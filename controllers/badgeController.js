@@ -15,7 +15,7 @@ exports.getAllBadges = asyncHandler(async (req, res) => {
 
 // Get badge by ID
 exports.getBadge = asyncHandler(async (req, res) => {
-  const badge = await badgeService.getBadge(req.params.id);
+  const badge = await badgeService.getBadge(req.params.badgeId);
   res.status(200).json({ badge });
 });
 
@@ -27,13 +27,13 @@ exports.getBadgeByName = asyncHandler(async (req, res) => {
 
 // Update badge
 exports.updateBadge = asyncHandler(async (req, res) => {
-  const badge = await badgeService.updateBadge(req.params.id, req.body);
+  const badge = await badgeService.updateBadge(req.params.badgeId, req.body);
   res.status(200).json({ message: "Badge updated successfully.", badge });
 });
 
 // Delete badge
 exports.deleteBadge = asyncHandler(async (req, res) => {
-  await badgeService.deleteBadge(req.params.id);
+  await badgeService.deleteBadge(req.params.badgeId);
   res.status(200).json({ message: "Badge deleted successfully." });
 });
 
@@ -47,22 +47,4 @@ exports.updateBadgeByName = asyncHandler(async (req, res) => {
 exports.deleteBadgeByName = asyncHandler(async (req, res) => {
   await badgeService.deleteBadgeByName(req.params.name);
   res.status(200).json({ message: "Badge deleted successfully." });
-});
-
-// Award badge to user
-exports.awardBadgeToUser = asyncHandler(async (req, res) => {
-  const result = await badgeService.awardBadgeToUser(req.params.userId, req.params.badgeId);
-  res.status(200).json(result);
-});
-
-// Remove badge from user
-exports.removeBadgeFromUser = asyncHandler(async (req, res) => {
-  const result = await badgeService.removeBadgeFromUser(req.params.userId, req.params.badgeId);
-  res.status(200).json(result);
-});
-
-// Get user's badges
-exports.getUserBadges = asyncHandler(async (req, res) => {
-  const badges = await badgeService.getUserBadges(req.params.userId);
-  res.status(200).json({ badges });
 });

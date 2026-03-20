@@ -1,4 +1,4 @@
-const { body, validationResult } = require("express-validator");
+const { body, query, validationResult } = require("express-validator");
 
 // Middleware to handle validation errors
 const handleValidationErrors = (req, res, next) => {
@@ -15,6 +15,36 @@ const handleValidationErrors = (req, res, next) => {
   }
   next();
 };
+
+// Get all skills query validator
+exports.validateGetAllSkillsQuery = [
+  query("category")
+    .optional()
+    .isString()
+    .withMessage("category must be a string"),
+  query("preset")
+    .optional()
+    .isIn(["true", "false"])
+    .withMessage("preset must be either 'true' or 'false'"),
+  (req, res, next) => {
+    const validParams = ["category", "preset"];
+    const invalidParams = Object.keys(req.query).filter(
+      (param) => !validParams.includes(param)
+    );
+    if (invalidParams.length > 0) {
+      return res.status(400).json({
+        error: "Validation failed",
+        errorCode: "ERR_VALIDATION",
+        errors: invalidParams.map((param) => ({
+          field: param,
+          message: `Unknown parameter`,
+        })),
+      });
+    }
+    next();
+  },
+  handleValidationErrors,
+];
 
 // Create skill validator
 exports.validateCreateSkill = [

@@ -21,6 +21,8 @@ const userSchema = new mongoose.Schema({
   skills: [{ type: mongoose.Schema.Types.ObjectId, ref: "Skill" }],
   badges: [{ type: mongoose.Schema.Types.ObjectId, ref: "Badge" }],
   profileScore: { type: Number, default: 0 },
+  followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   joinedAt: { type: Date, default: Date.now },
 });
 

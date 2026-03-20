@@ -15,25 +15,25 @@ exports.getAllProjects = asyncHandler(async (req, res) => {
 
 // Get project by ID
 exports.getProject = asyncHandler(async (req, res) => {
-  const project = await projectService.getProject(req.params.id);
+  const project = await projectService.getProject(req.params.projectId);
   res.status(200).json({ project });
 });
 
 // Update project
 exports.updateProject = asyncHandler(async (req, res) => {
-  const project = await projectService.updateProject(req.params.id, req.body);
+  const project = await projectService.updateProject(req.params.projectId, req.body);
   res.status(200).json({ message: "Project updated successfully.", project });
 });
 
 // Delete project
 exports.deleteProject = asyncHandler(async (req, res) => {
-  const result = await projectService.deleteProject(req.params.id);
+  const result = await projectService.deleteProject(req.params.projectId);
   res.status(200).json(result);
 });
 
 // Get reviews for a project
 exports.getProjectReviews = asyncHandler(async (req, res) => {
-  const reviews = await projectService.getProjectReviews(req.params.id);
+  const reviews = await projectService.getProjectReviews(req.params.projectId);
   res.status(200).json(reviews);
 });
 

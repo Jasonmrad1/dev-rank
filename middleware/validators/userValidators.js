@@ -128,3 +128,24 @@ exports.validateFollowRequest = [
     .withMessage("User ID must be a valid user ID"),
   handleValidationErrors,
 ];
+
+// Validate award badge request body
+exports.validateAwardBadge = [
+  body("badgeId")
+    .notEmpty()
+    .withMessage("Badge ID is required")
+    .isMongoId()
+    .withMessage("Badge ID must be a valid MongoDB ID"),
+  handleValidationErrors,
+];
+
+// Validate award badge by name request body
+exports.validateAwardBadgeByName = [
+  body("badgeName")
+    .trim()
+    .notEmpty()
+    .withMessage("Badge name is required")
+    .isLength({ min: 2 })
+    .withMessage("Badge name must be at least 2 characters long"),
+  handleValidationErrors,
+];

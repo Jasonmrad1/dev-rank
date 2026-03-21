@@ -12,20 +12,20 @@ exports.apply = async (data) => {
     throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
   }
 
-  const existing = await CertificationRequest.findOne({ userId, status: "pending" });
+  const existing = await CertificationRequest.findOne({ user: userId, status: "pending" });
   if (existing) {
     throw new AppError("User already has a pending certification request.", 409, ERROR_CODES.DUPLICATE);
   }
 
   const request = await CertificationRequest.create({
-    userId,
+    user: userId,
     cvUrl,
     experience,
     motivation,
     techExpertise,
   });
 
-  await User.findByIdAndUpdate(user, { reviewerStatus: "pending" , isVerifiedReviewer: false});
+  await User.findByIdAndUpdate(existingUser._id, { reviewerStatus: "pending" , isVerifiedReviewer: false});
 
   certificationLogger.logCertificationApplied(existingUser._id.toString(), request._id.toString(), techExpertise);
 
@@ -81,5 +81,16 @@ exports.reject = async (certificationRequestId, adminNotes) => {
 
   certificationLogger.logCertificationRejected("system", request._id.toString(), adminNotes);
 
+  return request;
+};
+
+exports.getRequestById = async (certificationRequestId) => {
+  const request = await CertificationRequest.findById(certificationRequestId).populate(
+    "user",
+    "name email role reviewerStatus isVerifiedReviewer"
+  );
+  if (!request) {
+    throw new AppError("Certification request not found.", 404, ERROR_CODES.NOT_FOUND);
+  }
   return request;
 };

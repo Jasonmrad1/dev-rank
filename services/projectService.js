@@ -6,7 +6,7 @@ const AppError = require("../utils/AppError");
 const ERROR_CODES = require("../utils/errorCodes");
 
 const recalculateUserProfileScore = async (userId) => {
-    const ownedProjects = await Project.find({ userId });
+    const ownedProjects = await Project.find({ user: userId });
 
     if (ownedProjects.length === 0) {
         await User.findByIdAndUpdate(userId, { profileScore: 0 });
@@ -42,7 +42,7 @@ exports.createProject = async (data) => {
     }
 
     const project = await Project.create({
-        userId,
+        user: userId,
         title,
         description,
         repoUrl,
@@ -53,7 +53,7 @@ exports.createProject = async (data) => {
 
     projectLogger.logProjectCreated(ownerUser._id.toString(), project._id.toString(), project.title, project.status);
 
-    return await project.populate("userId", "name email role githubUrl");
+    return await project.populate("user", "name email role githubUrl");
 };
 
 exports.getAllProjects = async (filters = {}) => {
@@ -64,7 +64,7 @@ exports.getAllProjects = async (filters = {}) => {
         if (!userExists) {
             throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
         }
-        query.userId = filters.userId;
+        query.user = filters.userId;
     }
 
     if (filters.status) {
@@ -79,13 +79,13 @@ exports.getAllProjects = async (filters = {}) => {
     }
 
     return await Project.find(query)
-        .populate("userId", "name email role githubUrl")
+        .populate("user", "name email role githubUrl")
         .sort({ createdAt: -1 });
 };
 
 exports.getProject = async (projectId) => {
     const project = await Project.findById(projectId).populate(
-        "userId",
+        "user",
         "name email role githubUrl"
     );
 
@@ -108,13 +108,13 @@ exports.updateProject = async (projectId, data) => {
             status: data.status,
         },
         { new: true, runValidators: true }
-    ).populate("userId", "name email role githubUrl");
+    ).populate("user", "name email role githubUrl");
 
     if (!project) {
         throw new AppError("Project not found.", 404, ERROR_CODES.NOT_FOUND);
     }
 
-    projectLogger.logProjectUpdated(project.userId._id.toString(), project._id.toString(), project.title, project.status);
+    projectLogger.logProjectUpdated(project.user._id.toString(), project._id.toString(), project.title, project.status);
 
     return project;
 };
@@ -126,17 +126,17 @@ async function cleanupProjectData(project) {
     // Delete related reviews
     await Review.deleteMany({ project: project._id });
     // Recalculate user's profile score directly
-    await recalculateUserProfileScore(project.userId);
+    await recalculateUserProfileScore(project.user);
 }
 
 exports.deleteProject = async (projectId) => {
-    const project = await Project.findById(projectId).populate("userId", "email");
+    const project = await Project.findById(projectId).populate("user", "email");
     if (!project) {
         throw new AppError("Project not found.", 404, ERROR_CODES.NOT_FOUND);
     }
     await cleanupProjectData(project);
 
-    projectLogger.logProjectDeleted(project.userId._id.toString(), project._id.toString(), project.title);
+    projectLogger.logProjectDeleted(project.user._id.toString(), project._id.toString(), project.title);
     return { message: "Project deleted successfully." };
 };
 
@@ -154,7 +154,7 @@ exports.getProjectReviews = async (projectId) => {
 
 exports.getProjectByTitle = async (title) => {
     const project = await Project.findOne({ title })
-        .populate("userId", "name email role githubUrl");
+        .populate("user", "name email role githubUrl");
 
     if (!project) {
         throw new AppError("Project not found.", 404, ERROR_CODES.NOT_FOUND);
@@ -169,7 +169,7 @@ exports.getProjectsByUser = async (userId) => {
         throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
     }
 
-    return await Project.find({ userId })
-        .populate("userId", "name email role githubUrl")
+    return await Project.find({ user: userId })
+        .populate("user", "name email role githubUrl")
         .sort({ createdAt: -1 });
 };

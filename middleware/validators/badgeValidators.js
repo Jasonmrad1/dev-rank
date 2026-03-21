@@ -58,7 +58,7 @@ exports.validateCreateBadge = [
     .trim()
     .notEmpty()
     .withMessage("Description is required")
-    .isLength({ min: 10 })
+    .isLength({ min: 5 })
     .withMessage("Description must be at least 10 characters long"),
   body("icon")
     .optional()
@@ -92,8 +92,8 @@ exports.validateUpdateBadge = [
   body("description")
     .optional()
     .trim()
-    .isLength({ min: 10 })
-    .withMessage("Description must be at least 10 characters long"),
+    .isLength({ min: 5 })
+    .withMessage("Description must be at least 5 characters long"),
   body("icon")
     .optional()
     .trim()

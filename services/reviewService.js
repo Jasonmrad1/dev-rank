@@ -67,7 +67,7 @@ exports.createReview = async (data) => {
         throw new AppError("Only verified reviewers can submit reviews.", 403, ERROR_CODES.FORBIDDEN);
     }
 
-    if (existingProject.userId.toString() === reviewerId.toString()) {
+    if (existingProject.user.toString() === reviewerId.toString()) {
         throw new AppError("Project owners cannot review their own projects.", 403, ERROR_CODES.FORBIDDEN);
     }
 
@@ -90,7 +90,7 @@ exports.createReview = async (data) => {
     });
 
     await recalculateProjectAggregates(projectId);
-    await recalculateUserProfileScore(existingProject.userId);
+    await recalculateUserProfileScore(existingProject.user);
 
     reviewLogger.logReviewCreated(existingReviewer._id.toString(), review._id.toString(), projectId.toString(), overallRating, status);
 

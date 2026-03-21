@@ -24,8 +24,8 @@ exports.validateGetAllProjectsQuery = [
     .withMessage("userId must be a valid MongoDB ID"),
   query("status")
     .optional()
-    .isIn(["draft", "seeking-review", "under-review", "reviewed", "completed"])
-    .withMessage("status must be one of: draft, seeking-review, under-review, reviewed, completed"),
+    .isIn(["seeking-review", "under-review", "reviewed", "archived"])
+    .withMessage("status must be one of: seeking-review, under-review, reviewed, archived"),
   query("techStack")
     .optional()
     .isString()
@@ -89,8 +89,8 @@ exports.validateCreateProject = [
     .notEmpty()
     .withMessage("Each tech stack item must be a non-empty string"),
   body("status")
-    .isIn(["draft", "seeking-review", "under-review", "completed"])
-    .withMessage("Status must be one of: draft, seeking-review, under-review, completed"),
+    .isIn(["seeking-review", "under-review", "reviewed", "archived"])
+    .withMessage("Status must be one of: seeking-review, under-review, reviewed, archived"),
   handleValidationErrors,
 ];
 
@@ -130,7 +130,7 @@ exports.validateUpdateProject = [
     .withMessage("Each tech stack item must be a non-empty string"),
   body("status")
     .optional()
-    .isIn(["draft", "seeking-review", "under-review", "completed"])
-    .withMessage("Status must be one of: draft, seeking-review, under-review, completed"),
+    .isIn(["seeking-review", "under-review", "reviewed", "archived"])
+    .withMessage("Status must be one of: seeking-review, under-review, reviewed, archived"),
   handleValidationErrors,
 ];

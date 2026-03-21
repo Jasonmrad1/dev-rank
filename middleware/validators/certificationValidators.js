@@ -18,12 +18,12 @@ const handleValidationErrors = (req, res, next) => {
 
 // Create certification request validator
 exports.validateCreateCertificationRequest = [
-  body("user")
+  body("userId")
     .trim()
     .notEmpty()
     .withMessage("User ID is required")
     .isMongoId()
-    .withMessage("User must be a valid MongoDB ID"),
+    .withMessage("userId must be a valid MongoDB ID"),
   body("cvUrl")
     .optional()
     .trim()

@@ -19,8 +19,15 @@ exports.approve = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Certification approved successfully.", request });
 });
 
+
 // Reject certification
 exports.reject = asyncHandler(async (req, res) => {
   const request = await certificationService.reject(req.params.certificationRequestId, req.body.adminNotes);
   res.status(200).json({ message: "Certification rejected successfully.", request });
+});
+
+// Get certification by ID
+exports.getById = asyncHandler(async (req, res) => {
+  const request = await certificationService.getRequestById(req.params.certificationId);
+  res.status(200).json({ request });
 });

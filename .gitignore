@@ -3,3 +3,7 @@ node_modules/
 devrank.sqlite
 frontend
 package-lock.json
+__tests__/**/*.sqlite
+__tests__/**/test-*.db*
+test-results/
+coverage/

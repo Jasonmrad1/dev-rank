@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest --detectOpenHandles --forceExit",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "dev": "nodemon app.js",
     "seed:skills": "node seeds/seedSkills.js"
   },
@@ -24,6 +26,8 @@
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "jest": "^29.7.0",
+    "supertest": "^6.3.3"
   }
 }

@@ -32,6 +32,7 @@ exports.validateRegister = [
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long"),
   body("role")
+    .optional()
     .isIn(["developer", "reviewer"])
     .withMessage("Role must be either 'developer' or 'reviewer'"),
   body("bio")

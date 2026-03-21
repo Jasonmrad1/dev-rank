@@ -63,7 +63,7 @@ exports.updateUser = async (id, { name, bio, githubUrl, avatarUrl }) => {
 
 async function cleanupUserData(user) {
   // Delete projects and reviews
-  await Project.deleteMany({ userId: user._id });
+  await Project.deleteMany({ user: user._id });
   await Review.deleteMany({ reviewer: user._id });
   // Remove from skills
   await Skill.updateMany(

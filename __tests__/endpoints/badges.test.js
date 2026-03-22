@@ -206,6 +206,22 @@ describe("Badge API Endpoints", () => {
       expect(checkRes.status).toBe(HTTP_STATUS.NOT_FOUND);
     });
 
+    it("should remove deleted badge from all users' badges arrays if referenced", async () => {
+      // Create badge and user
+      const badge = await createBadge();
+      const userFactory = require("../factories/userFactory");
+      const user = await userFactory.createUser();
+      // Simulate badge assignment
+      const User = require("../../models/mongo/User");
+      user.badges = [badge._id];
+      await user.save();
+      // Delete badge
+      await request(app).delete(`${API_ROUTES.BADGES}/${badge._id}`);
+      // Check user no longer has the badge
+      const updatedUser = await User.findById(user._id);
+      expect(updatedUser.badges ? updatedUser.badges.map(String) : []).not.toContain(badge._id.toString());
+    });
+
     it("should return 404 for non-existent badge", async () => {
       const fakeId = new mongoose.Types.ObjectId();
       const response = await request(app).delete(`${API_ROUTES.BADGES}/${fakeId}`);

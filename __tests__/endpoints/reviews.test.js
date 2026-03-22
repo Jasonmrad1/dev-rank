@@ -185,6 +185,20 @@ describe("Review API Endpoints", () => {
       expect(checkRes.status).toBe(HTTP_STATUS.NOT_FOUND);
     });
 
+    it("should remove deleted review from all projects' reviews arrays if referenced", async () => {
+      // Create review and project
+      const review = await createReview({ reviewer: reviewerId, project: projectId });
+      const project = await Project.findById(projectId);
+      // Simulate review assignment
+      project.reviews = [review._id];
+      await project.save();
+      // Delete review
+      await request(app).delete(`${API_ROUTES.REVIEWS}/${review._id}`);
+      // Check project no longer has the review
+      const updatedProject = await Project.findById(projectId);
+      expect(updatedProject.reviews ? updatedProject.reviews.map(String) : []).not.toContain(review._id.toString());
+    });
+
     it("should return 404 for non-existent review", async () => {
       const fakeId = new mongoose.Types.ObjectId();
       const response = await request(app).delete(`${API_ROUTES.REVIEWS}/${fakeId}`);

@@ -212,6 +212,26 @@ describe("Skill API Endpoints", () => {
       expect(checkRes.status).toBe(HTTP_STATUS.NOT_FOUND);
     });
 
+    it("should remove deleted skill from all users' skills arrays", async () => {
+      // Create skill and users
+      const skill = await createSkill();
+      const userFactory = require("../factories/userFactory");
+      const users = await userFactory.createUsers(2);
+      // Add skill to both users
+      const User = require("../../models/mongo/User");
+      for (const user of users) {
+        user.skills.push(skill._id);
+        await user.save();
+      }
+      // Delete skill
+      await request(app).delete(`${API_ROUTES.SKILLS}/${skill._id}`);
+      // Check users no longer have the skill
+      const updatedUsers = await User.find({ _id: { $in: users.map(u => u._id) } });
+      for (const user of updatedUsers) {
+        expect(user.skills.map(String)).not.toContain(skill._id.toString());
+      }
+    });
+
     it("should return 404 for non-existent skill", async () => {
       const fakeId = new mongoose.Types.ObjectId();
       const response = await request(app).delete(`${API_ROUTES.SKILLS}/${fakeId}`);

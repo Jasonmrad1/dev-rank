@@ -33,8 +33,8 @@ async function createReview(reviewerIdOrData, projectIdOrOverrides, overrides = 
     // First two args are IDs
     data = {
       ...DEFAULT_REVIEW,
-      reviewerId: reviewerIdOrData,
-      projectId: projectIdOrOverrides,
+      reviewer: reviewerIdOrData,
+      project: projectIdOrOverrides,
       ...overrides,
     };
   } else if (typeof reviewerIdOrData === "object") {

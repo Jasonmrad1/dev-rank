@@ -12,7 +12,9 @@ const { createTestApp } = require("../helpers/testSetup");
 const { clearMongoCollections } = require("../helpers/db");
 const { HTTP_STATUS, API_ROUTES } = require("../helpers/testConstants");
 const { createUser, createUsers } = require("../factories/userFactory");
-const { createSkill, createSkills } = require("../factories/skillFactory");
+const { createSkills } = require("../factories/skillFactory");
+const { createBadge, createBadges } = require("../factories/badgeFactory");
+const Badge = require("../../models/mongo/Badge");
 
 const app = createTestApp(API_ROUTES.USERS, userRoutes);
 
@@ -21,8 +23,96 @@ describe("User API Endpoints", () => {
   let userId2;
 
   beforeEach(async () => {
-    // Clear users and skills collections
-    await clearMongoCollections(User, Skill);
+    // Clear users, skills, and badges collections
+    await clearMongoCollections(User, Skill, Badge);
+  });
+  describe("DELETE /api/users/:id/skills", () => {
+    it("should remove multiple skills from user", async () => {
+      const user = await createUser();
+      const skills = await createSkills(2);
+      // Add both skills to user
+      await request(app)
+        .post(`${API_ROUTES.USERS}/${user._id}/skills`)
+        .send({ skills: skills.map(s => s._id.toString()) });
+
+      // Remove both skills
+      const response = await request(app)
+        .delete(`${API_ROUTES.USERS}/${user._id}/skills`)
+        .send({ skills: skills.map(s => s._id.toString()) });
+
+      expect(response.status).toBe(HTTP_STATUS.OK);
+      expect(response.body.user.skills.length).toBe(0);
+      expect(response.body.message).toMatch(/removed successfully/);
+    });
+  });
+
+  describe("POST /api/users/:id/badges", () => {
+    it("should award a badge to user by ID", async () => {
+      const user = await createUser();
+      const badge = await createBadge();
+
+      const response = await request(app)
+        .post(`${API_ROUTES.USERS}/${user._id}/badges`)
+        .send({ badgeId: badge._id.toString() });
+
+      expect(response.status).toBe(HTTP_STATUS.OK);
+      const badgeIds = response.body.user.badges.map(b => (b._id ? b._id.toString() : b.toString()));
+      expect(badgeIds).toContain(badge._id.toString());
+      expect(response.body.message).toMatch(/awarded successfully/);
+    });
+  });
+
+  describe("DELETE /api/users/:id/badges/:badgeId", () => {
+    it("should remove a badge from user by ID", async () => {
+      const user = await createUser();
+      const badge = await createBadge();
+      // Award badge first
+      await request(app)
+        .post(`${API_ROUTES.USERS}/${user._id}/badges`)
+        .send({ badgeId: badge._id.toString() });
+
+      // Remove badge
+      const response = await request(app)
+        .delete(`${API_ROUTES.USERS}/${user._id}/badges/${badge._id}`);
+
+      expect(response.status).toBe(HTTP_STATUS.OK);
+      expect(response.body.user.badges).not.toContainEqual(badge._id.toString());
+      expect(response.body.message).toMatch(/removed successfully/);
+    });
+  });
+
+  describe("POST /api/users/:id/badges/name", () => {
+    it("should award a badge to user by name", async () => {
+      const user = await createUser();
+      const badge = await createBadge({ name: "Special Badge" });
+
+      const response = await request(app)
+        .post(`${API_ROUTES.USERS}/${user._id}/badges/name`)
+        .send({ badgeName: badge.name });
+
+      expect(response.status).toBe(HTTP_STATUS.OK);
+      expect(response.body.user.badges.length).toBe(1);
+      expect(response.body.message).toMatch(/awarded successfully/);
+    });
+  });
+
+  describe("DELETE /api/users/:id/badges/name/:badgeName", () => {
+    it("should remove a badge from user by name", async () => {
+      const user = await createUser();
+      const badge = await createBadge({ name: "RemoveMe" });
+      // Award badge by name
+      await request(app)
+        .post(`${API_ROUTES.USERS}/${user._id}/badges/name`)
+        .send({ badgeName: badge.name });
+
+      // Remove badge by name
+      const response = await request(app)
+        .delete(`${API_ROUTES.USERS}/${user._id}/badges/name/${encodeURIComponent(badge.name)}`);
+
+      expect(response.status).toBe(HTTP_STATUS.OK);
+      expect(response.body.user.badges.length).toBe(0);
+      expect(response.body.message).toMatch(/removed successfully/);
+    });
   });
 
   describe("POST /api/users/register", () => {
@@ -161,6 +251,22 @@ describe("User API Endpoints", () => {
 
       const checkRes = await request(app).get(`${API_ROUTES.USERS}/${user._id}`);
       expect(checkRes.status).toBe(HTTP_STATUS.NOT_FOUND);
+    });
+
+    it("should remove deleted user from all skills' users arrays", async () => {
+      const user = await createUser();
+      const skills = await createSkills(2);
+      const Skill = require("../../models/mongo/Skill");
+      for (const skill of skills) {
+        skill.users.push(user._id);
+        await skill.save();
+      }
+      await request(app).delete(`${API_ROUTES.USERS}/${user._id}`);
+      // Check skills no longer have the user
+      const updatedSkills = await Skill.find({ _id: { $in: skills.map(s => s._id) } });
+      for (const skill of updatedSkills) {
+        expect(skill.users.map(String)).not.toContain(user._id.toString());
+      }
     });
 
     it("should return 404 for non-existent user", async () => {

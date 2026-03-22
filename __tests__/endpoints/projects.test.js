@@ -177,6 +177,22 @@ describe("Project API Endpoints", () => {
       expect(checkRes.status).toBe(HTTP_STATUS.NOT_FOUND);
     });
 
+    it("should remove deleted project from all users' projects arrays if referenced", async () => {
+      // Create project and user with unique email
+      const project = await createProject({ user: userId });
+      const userFactory = require("../factories/userFactory");
+      const uniqueEmail = `test+${Date.now()}@test.com`;
+      const user = await userFactory.createUser({ email: uniqueEmail });
+      // Simulate project assignment
+      user.projects = [project._id];
+      await user.save();
+      // Delete project
+      await request(app).delete(`${API_ROUTES.PROJECTS}/${project._id}`);
+      // Check user no longer has the project
+      const updatedUser = await User.findById(user._id);
+      expect(updatedUser.projects ? updatedUser.projects.map(String) : []).not.toContain(project._id.toString());
+    });
+
     it("should return 404 for non-existent project", async () => {
       const fakeId = new mongoose.Types.ObjectId();
       const response = await request(app).delete(`${API_ROUTES.PROJECTS}/${fakeId}`);

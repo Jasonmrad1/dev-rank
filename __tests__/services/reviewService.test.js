@@ -71,8 +71,16 @@ describe('reviewService', () => {
       suggestions: [],
       status: 'published',
     });
+    // No projectId filter: should return all reviews
     const all = await reviewService.getAllReviews();
     expect(all.length).toBe(2);
+    // projectId filter not provided (empty object): should return all reviews
+    const allNoProjectFilter = await reviewService.getAllReviews({});
+    expect(allNoProjectFilter.length).toBe(2);
+    // projectId filter explicitly undefined: should return all reviews
+    const allProjectIdUndefined = await reviewService.getAllReviews({ projectId: undefined });
+    expect(allProjectIdUndefined.length).toBe(2);
+    // With reviewerId filter
     const filtered = await reviewService.getAllReviews({ reviewerId: reviewer._id.toString() });
     expect(filtered.length).toBe(1);
     expect(filtered[0].reviewer._id.toString()).toBe(reviewer._id.toString());

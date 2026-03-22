@@ -13,6 +13,41 @@ describe('badgeService', () => {
     await clearMongoCollection(User);
   });
 
+  it('should get all badges with and without filters', async () => {
+    await createBadge({ name: 'Badge1', category: 'achievement', isActive: true });
+    await createBadge({ name: 'Badge2', category: 'reviewer', isActive: false });
+    await createBadge({ name: 'Badge3', category: 'achievement', isActive: false });
+
+    // No filters
+    let all = await badgeService.getAllBadges({});
+    expect(all.length).toBe(3);
+
+    // category filter
+    let achievement = await badgeService.getAllBadges({ category: 'achievement' });
+    expect(achievement.length).toBe(2);
+    expect(achievement.every(b => b.category === 'achievement')).toBe(true);
+
+    // isActive filter (true)
+    let active = await badgeService.getAllBadges({ isActive: 'true' });
+    expect(active.length).toBe(1);
+    expect(active[0].isActive).toBe(true);
+
+    // isActive filter (false)
+    let inactive = await badgeService.getAllBadges({ isActive: 'false' });
+    expect(inactive.length).toBe(2);
+    expect(inactive.every(b => b.isActive === false)).toBe(true);
+
+    // Both filters
+    let achievementInactive = await badgeService.getAllBadges({ category: 'achievement', isActive: 'false' });
+    expect(achievementInactive.length).toBe(1);
+    expect(achievementInactive[0].category).toBe('achievement');
+    expect(achievementInactive[0].isActive).toBe(false);
+
+    // isActive undefined: should return all
+    let allUndefined = await badgeService.getAllBadges({ isActive: undefined });
+    expect(allUndefined.length).toBe(3);
+  });
+
 
   it('should not allow duplicate badge creation', async () => {
     await createBadge({ name: 'UniqueBadge' });

@@ -37,7 +37,7 @@ describe('certificationService', () => {
     await expect(certificationService.reject(req2._id, 'note')).rejects.toThrow(AppError);
   });
 
-  it('should throw if certification request not found on getRequestById', async () => {
-    await expect(certificationService.getRequestById('000000000000000000000000')).rejects.toThrow('Certification request not found');
+  it('should throw if certification request not found on getCertificationRequestById', async () => {
+    await expect(certificationService.getCertificationRequestById('000000000000000000000000')).rejects.toThrow('Certification request not found');
   });
 });

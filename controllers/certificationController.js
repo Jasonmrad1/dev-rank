@@ -27,7 +27,7 @@ exports.reject = asyncHandler(async (req, res) => {
 });
 
 // Get certification by ID
-exports.getById = asyncHandler(async (req, res) => {
-  const request = await certificationService.getRequestById(req.params.certificationId);
+exports.getCertificationById = asyncHandler(async (req, res) => {
+  const request = await certificationService.getCertificationRequestById(req.params.certificationId);
   res.status(200).json({ request });
 });

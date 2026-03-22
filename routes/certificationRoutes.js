@@ -14,8 +14,7 @@ router.patch("/:certificationRequestId/approve", validateUpdateCertificationRequ
 // PATCH /api/certifications/:certificationRequestId/reject - Reject certification
 router.patch("/:certificationRequestId/reject", validateUpdateCertificationRequest, certificationController.reject);
 
-//TODO add to routes in openApi
 // GET /api/certifications/:certificationId - Get certification by ID 
-router.get("/:certificationId", require("../controllers/certificationController").getById);
+router.get("/:certificationId", certificationController.getCertificationById);
 
 module.exports = router;

@@ -84,7 +84,7 @@ exports.reject = async (certificationRequestId, adminNotes) => {
   return request;
 };
 
-exports.getRequestById = async (certificationRequestId) => {
+exports.getCertificationRequestById = async (certificationRequestId) => {
   const request = await CertificationRequest.findById(certificationRequestId).populate(
     "user",
     "name email role reviewerStatus isVerifiedReviewer"

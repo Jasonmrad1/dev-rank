@@ -1504,6 +1504,32 @@ paths:
         '403':
           description: Unauthorized
 
+    /certifications/{certificationId}:
+      get:
+        tags:
+          - Certifications
+        summary: Get certification by ID
+        description: Retrieve a specific certification by its ID
+        parameters:
+          - name: certificationId
+            in: path
+            required: true
+            schema:
+              type: string
+            description: Certification ID (MongoDB ObjectId)
+        responses:
+          '200':
+            description: Certification found
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    certification:
+                      $ref: '#/components/schemas/CertificationRequest'
+          '404':
+            $ref: '#/components/responses/NotFound'
+
   /certifications/{certificationRequestId}/approve:
     patch:
       tags:

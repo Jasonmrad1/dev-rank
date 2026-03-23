@@ -1,4 +1,4 @@
-module.exports = {
+module.exports = Object.freeze({
   VALIDATION: "ERR_VALIDATION",
   NOT_FOUND: "ERR_NOT_FOUND",
   DUPLICATE: "ERR_DUPLICATE",
@@ -6,4 +6,4 @@ module.exports = {
   FORBIDDEN: "ERR_FORBIDDEN",
   INTERNAL: "ERR_INTERNAL",
   GENERIC: "ERR_GENERIC",
-};
+});

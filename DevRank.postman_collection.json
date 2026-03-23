@@ -798,7 +798,7 @@
       "name": "Certifications Routes",
       "item": [
         {
-          "name": "Create Certificate",
+          "name": "Create Certification Request",
           "request": {
             "method": "POST",
             "header": [],
@@ -911,6 +911,34 @@
                 "certifications",
                 "69bd713e3b98b13d15e66479",
                 "reject"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Certification Request",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/certifications/69bd7b353a728959a982682f",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "3000",
+              "path": [
+                "api",
+                "certifications",
+                "69bd7b353a728959a982682f"
               ]
             }
           },

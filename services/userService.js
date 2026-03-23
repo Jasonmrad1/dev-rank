@@ -97,11 +97,12 @@ exports.deleteUser = async (id) => {
 };
 
 const resolveSkillIds = async (inputs) => {
+  const isMongoId = (value) => /^[a-f\d]{24}$/i.test(value);
   const arr = Array.isArray(inputs) ? inputs : [inputs];
   const skills = await Skill.find({
     $or: [
-      { _id: { $in: arr.filter((v) => v.match && v.match(/^[a-f\d]{24}$/i)) } },
-      { name: { $in: arr.filter((v) => !v.match || !v.match(/^[a-f\d]{24}$/i)) } },
+      { _id: { $in: arr.filter(isMongoId) } },
+      { name: { $in: arr.filter((v) => !isMongoId(v)) } },
     ],
   });
   if (skills.length !== arr.length) {
@@ -109,7 +110,7 @@ const resolveSkillIds = async (inputs) => {
   }
   return skills.map((s) => s._id);
 };
-
+ 
 exports.addSkills = async (userId, skillInputs) => {
   const user = await User.findById(userId);
   if (!user) {
@@ -117,8 +118,8 @@ exports.addSkills = async (userId, skillInputs) => {
   }
 
   const ids = await resolveSkillIds(skillInputs);
-
-  const newIds = ids.filter((id) => !user.skills.map((s) => s.toString()).includes(id.toString()));
+  const existingIds = new Set(user.skills.map(String));
+  const newIds = ids.filter((id) => !existingIds.has(id.toString()));
   if (newIds.length === 0) {
     throw new AppError("All provided skills are already assigned to this user.", 409, ERROR_CODES.DUPLICATE);
   }
@@ -139,17 +140,16 @@ exports.removeSkill = async (userId, skillId) => {
     throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
   }
 
-  const ids = await resolveSkillIds([skillId]);
-  const idStrings = ids.map(String);
-
-  const existingSkillStrings = user.skills.map((s) => s.toString());
+  const ids = await resolveSkillIds(skillId);
+  const skillIdString = ids[0].toString();
+  const existingSkillStrings = user.skills.map(String);
   const removableIds = ids.filter((id) => existingSkillStrings.includes(id.toString()));
 
   if (removableIds.length === 0) {
     throw new AppError("This skill is not assigned to the user.", 404, ERROR_CODES.NOT_FOUND);
   }
 
-  user.skills = user.skills.filter((s) => !idStrings.includes(s.toString()));
+  user.skills = user.skills.filter((s) => s.toString() !== skillIdString);
   await user.save();
 
   await Skill.updateMany(
@@ -160,6 +160,38 @@ exports.removeSkill = async (userId, skillId) => {
   await user.populate("skills");
 
   userLogger.logUserSkillRemoved(user._id.toString(), skillId, removableIds.length);
+
+  return { user, count: removableIds.length };
+};
+
+exports.removeSkills = async (userId, skills) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
+  }
+
+  const ids = await resolveSkillIds(skills);
+
+  const existingSkillStr = user.skills.map(String);
+  const removableIds = ids.filter((id) => existingSkillStr.includes(id.toString()));
+
+  if (removableIds.length === 0) {
+    throw new AppError("None of the provided skills are assigned to this user.", 404, ERROR_CODES.NOT_FOUND);
+  }
+
+  const removableStr = removableIds.map(String);
+
+  user.skills = user.skills.filter((s) => !removableStr.includes(s.toString()));
+  await user.save();
+
+  await Skill.updateMany(
+    { _id: { $in: removableIds } },
+    { $pull: { users: user._id } }
+  );
+
+  await user.populate("skills");
+
+  userLogger.logUserSkillsRemoved(user._id.toString(), skills, removableIds.length);
 
   return { user, count: removableIds.length };
 };
@@ -222,39 +254,6 @@ exports.getFollowing = async (userId) => {
     throw new AppError('User not found.', 404, ERROR_CODES.NOT_FOUND);
   }
   return user.following;
-};
-
-exports.removeSkills = async (userId, skills) => {
-  const user = await User.findById(userId);
-  if (!user) {
-    throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
-  }
-
-  const inputs = Array.isArray(skills) ? skills : [skills];
-  const ids = await resolveSkillIds(inputs);
-
-  const existingSkillStr = user.skills.map((s) => s.toString());
-  const removableIds = ids.filter((id) => existingSkillStr.includes(id.toString()));
-
-  if (removableIds.length === 0) {
-    throw new AppError("None of the provided skills are assigned to this user.", 404, ERROR_CODES.NOT_FOUND);
-  }
-
-  const removableStr = removableIds.map(String);
-
-  user.skills = user.skills.filter((s) => !removableStr.includes(s.toString()));
-  await user.save();
-
-  await Skill.updateMany(
-    { _id: { $in: removableIds } },
-    { $pull: { users: user._id } }
-  );
-
-  await user.populate("skills");
-
-  userLogger.logUserSkillsRemoved(user._id.toString(), inputs, removableIds.length);
-
-  return { user, count: removableIds.length };
 };
 
 exports.awardBadge = async (userId, badgeId) => {

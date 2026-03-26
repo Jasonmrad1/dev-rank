@@ -2,7 +2,7 @@ const Review = require("../models/mongo/Review");
 const Project = require("../models/mongo/Project");
 const User = require("../models/mongo/User");
 const reviewLogger = require("../loggers/reviewLogger");
-const {recalculateUserProfileScore}= require("./projectService");
+const { recalculateUserProfileScore } = require("./projectService");
 const AppError = require("../utils/AppError");
 const ERROR_CODES = require("../utils/errorCodes");
 
@@ -26,7 +26,6 @@ const recalculateProjectAggregates = async (projectId) => {
     const aggregateCreativity = calculateAverage(reviews, "creativityScore");
     const aggregateCleanCode = calculateAverage(reviews, "cleanCodeScore");
     const hireVotes = reviews.filter((r) => r.wouldHire === true).length;
-
 
     await Project.findByIdAndUpdate(projectId, {
         aggregateRating,

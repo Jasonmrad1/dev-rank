@@ -1,16 +1,16 @@
 require("dotenv").config();
 const express = require("express");
-const connectMongoDB = require("./config/mongodb");
-const sequelize = require("./config/sqlite");
+const connectMongoDB = require("./config/mongodb.js");
+const sequelize = require("./config/sqlite.js");
 
-const userRoutes = require("./routes/userRoutes");
-const projectRoutes = require("./routes/projectRoutes");
-const reviewRoutes = require("./routes/reviewRoutes");
-const skillRoutes = require("./routes/skillRoutes");
-const certificationRoutes = require("./routes/certificationRoutes");
-const badgeRoutes = require("./routes/badgeRoutes");
-const activityLogRoutes = require("./routes/activityLogRoutes");
-const { registerEventListeners } = require("./listeners/registerEventListeners");
+const userRoutes = require("./routes/userRoutes.js");
+const projectRoutes = require("./routes/projectRoutes.js");
+const reviewRoutes = require("./routes/reviewRoutes.js");
+const skillRoutes = require("./routes/skillRoutes.js");
+const certificationRoutes = require("./routes/certificationRoutes.js");
+const badgeRoutes = require("./routes/badgeRoutes.js");
+const activityLogRoutes = require("./routes/activityLogRoutes.js");
+const { registerEventListeners } = require("./listeners/registerEventListeners.js");
 const { swaggerUi, swaggerDocument } = require("./docs/swagger.config.js");
 
 const app = express();

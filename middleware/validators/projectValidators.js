@@ -28,7 +28,7 @@ exports.validateGetAllProjectsQuery = [
     .withMessage("status must be one of: seeking-review, under-review, reviewed, archived"),
   query("techStack")
     .optional()
-    .isString()
+    .isArray()
     .withMessage("techStack must be a string"),
   (req, res, next) => {
     const validParams = ["userId", "status", "techStack"];

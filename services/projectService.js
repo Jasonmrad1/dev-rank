@@ -73,7 +73,7 @@ exports.getAllProjects = async (filters = {}) => {
         const techs = Array.isArray(filters.techStack)
             ? filters.techStack
             : [filters.techStack];
-        query.techStack = { $in: techs };
+        query.techStack = { $all: techs };
     }
 
     return await Project.find(query)

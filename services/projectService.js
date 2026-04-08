@@ -107,7 +107,7 @@ exports.updateProject = async (projectId, data) => {
             techStack: data.techStack,
             status: data.status,
         },
-        { new: true, runValidators: true }
+        { returnDocument: "after", runValidators: true }
     ).populate("user", "name email role githubUrl");
 
     if (!project) {

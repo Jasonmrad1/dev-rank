@@ -133,6 +133,38 @@ describe('reviewService', () => {
     await expect(reviewService.updateReview('000000000000000000000000', { overallRating: 1 })).rejects.toThrow('Review not found');
   });
 
+  it('should recalculate owner profileScore after review update', async () => {
+    const created = await reviewService.createReview({
+      projectId: project._id.toString(),
+      reviewerId: reviewer._id.toString(),
+      overallRating: 2,
+      codeQualityScore: 2,
+      creativityScore: 2,
+      cleanCodeScore: 2,
+      wouldHire: false,
+      generalFeedback: 'Initial',
+      suggestions: [],
+      status: 'published',
+    });
+
+    const ownerBeforeUpdate = await User.findById(user._id);
+    expect(ownerBeforeUpdate.profileScore).toBe(2);
+
+    await reviewService.updateReview(created._id.toString(), {
+      overallRating: 5,
+      codeQualityScore: 5,
+      creativityScore: 5,
+      cleanCodeScore: 5,
+      wouldHire: true,
+      generalFeedback: 'Updated',
+      suggestions: ['None'],
+      status: 'published',
+    });
+
+    const ownerAfterUpdate = await User.findById(user._id);
+    expect(ownerAfterUpdate.profileScore).toBe(5);
+  });
+
   it('should delete a review successfully', async () => {
     const created = await reviewService.createReview({
       projectId: project._id.toString(),
@@ -149,6 +181,29 @@ describe('reviewService', () => {
     const result = await reviewService.deleteReview(created._id.toString());
     expect(result).toEqual({ message: 'Review deleted successfully.' });
     await expect(reviewService.getReview(created._id.toString())).rejects.toThrow('Review not found');
+  });
+
+  it('should recalculate owner profileScore after review deletion', async () => {
+    const created = await reviewService.createReview({
+      projectId: project._id.toString(),
+      reviewerId: reviewer._id.toString(),
+      overallRating: 4,
+      codeQualityScore: 4,
+      creativityScore: 4,
+      cleanCodeScore: 4,
+      wouldHire: true,
+      generalFeedback: 'To be deleted',
+      suggestions: [],
+      status: 'published',
+    });
+
+    const ownerAfterCreate = await User.findById(user._id);
+    expect(ownerAfterCreate.profileScore).toBe(4);
+
+    await reviewService.deleteReview(created._id.toString());
+
+    const ownerAfterDelete = await User.findById(user._id);
+    expect(ownerAfterDelete.profileScore).toBe(0);
   });
 
   it('should throw if reviewer is not verified or not reviewer role', async () => {

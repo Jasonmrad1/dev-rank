@@ -2,9 +2,13 @@ const userService = require('../../services/userService');
 const { createUser } = require('../factories/userFactory');
 const { createSkill } = require('../factories/skillFactory');
 const { createBadge } = require('../factories/badgeFactory');
+const { createProject } = require('../factories/projectFactory');
+const { createReview } = require('../factories/reviewFactory');
 const User = require('../../models/mongo/User');
 const Skill = require('../../models/mongo/Skill');
 const Badge = require('../../models/mongo/Badge');
+const Project = require('../../models/mongo/Project');
+const Review = require('../../models/mongo/Review');
 const AppError = require('../../utils/AppError');
 
 describe('userService', () => {
@@ -12,6 +16,8 @@ describe('userService', () => {
     await User.deleteMany({});
     await Skill.deleteMany({});
     await Badge.deleteMany({});
+    await Project.deleteMany({});
+    await Review.deleteMany({});
   });
 
   it('should not allow duplicate email registration', async () => {
@@ -156,5 +162,38 @@ describe('userService', () => {
     // Remove badge by name
     const result = await userService.removeBadgeByName(user._id, badge.name);
     expect(result.badges.map(b => b.toString())).not.toContain(badge._id.toString());
+  });
+
+  it('should delete reviews for projects owned by a deleted user', async () => {
+    const owner = await createUser({ name: 'DeleteOwner', email: 'delete-owner@test.com' });
+    const reviewer = await createUser({ name: 'DeleteReviewer', email: 'delete-reviewer@test.com' });
+    const project = await createProject(owner._id.toString(), { title: 'Owned Project To Delete' });
+
+    await createReview(reviewer._id.toString(), project._id.toString(), {
+      overallRating: 4,
+      codeQualityScore: 4,
+      creativityScore: 4,
+      cleanCodeScore: 4,
+      status: 'published',
+    });
+
+    expect(await Review.countDocuments({ project: project._id })).toBe(1);
+
+    await userService.deleteUser(owner._id.toString());
+
+    expect(await Review.countDocuments({ project: project._id })).toBe(0);
+  });
+
+  it('should remove deleted user from badge users arrays', async () => {
+    const user = await createUser({ name: 'BadgeCleanupUser', email: 'badge-cleanup@test.com' });
+    const badge = await createBadge({ name: 'Badge Cleanup' });
+
+    badge.users.push(user._id);
+    await badge.save();
+
+    await userService.deleteUser(user._id.toString());
+
+    const updatedBadge = await Badge.findById(badge._id);
+    expect(updatedBadge.users.map(String)).not.toContain(user._id.toString());
   });
 });

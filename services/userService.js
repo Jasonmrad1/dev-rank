@@ -62,14 +62,31 @@ exports.updateUser = async (id, { name, bio, githubUrl, avatarUrl }) => {
 
 
 async function cleanupUserData(user) {
-  // Delete projects and reviews
+  // Delete reviews on projects owned by this user, then delete owned projects.
+  const ownedProjects = await Project.find({ user: user._id }).select("_id");
+  const ownedProjectIds = ownedProjects.map((project) => project._id);
+
+  if (ownedProjectIds.length > 0) {
+    await Review.deleteMany({ project: { $in: ownedProjectIds } });
+  }
+
   await Project.deleteMany({ user: user._id });
+
+  // Delete reviews authored by this user.
   await Review.deleteMany({ reviewer: user._id });
+
   // Remove from skills
   await Skill.updateMany(
     { users: user._id },
     { $pull: { users: user._id } }
   );
+
+  // Remove from badges
+  await Badge.updateMany(
+    { users: user._id },
+    { $pull: { users: user._id } }
+  );
+
   await CertificationRequest.deleteMany({ user: user._id });
   // Remove from followers/following relationships
   await User.updateMany(

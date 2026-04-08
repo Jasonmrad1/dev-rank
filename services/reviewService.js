@@ -137,7 +137,7 @@ exports.updateReview = async (reviewId, data) => {
             suggestions: data.suggestions,
             status: data.status,
         },
-        { new: true, runValidators: true }
+        { returnDocument: "after", runValidators: true }
     )
 
     if (!review) {
@@ -147,7 +147,9 @@ exports.updateReview = async (reviewId, data) => {
     await recalculateProjectAggregates(review.project);
 
     const updatedProject = await Project.findById(review.project);
-    await recalculateUserProfileScore(updatedProject.userId);
+    if (updatedProject?.user) {
+        await recalculateUserProfileScore(updatedProject.user);
+    }
 
     const populatedReview = await Review.findById(review._id)
         .populate("project", "title status")
@@ -170,8 +172,8 @@ exports.deleteReview = async (reviewId) => {
     await recalculateProjectAggregates(review.project);
 
     const affectedProject = await Project.findById(review.project);
-    if (affectedProject) {
-        await recalculateUserProfileScore(affectedProject.userId);
+    if (affectedProject?.user) {
+        await recalculateUserProfileScore(affectedProject.user);
     }
 
     reviewLogger.logReviewDeleted(review.reviewer._id.toString(), review._id.toString(), review.project.toString());

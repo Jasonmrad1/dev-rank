@@ -38,20 +38,7 @@ const recalculateProjectAggregates = async (projectId) => {
     });
 };
 
-exports.createReview = async (data) => {
-    const {
-        projectId,
-        reviewerId,
-        overallRating,
-        codeQualityScore,
-        creativityScore,
-        cleanCodeScore,
-        wouldHire,
-        generalFeedback,
-        suggestions,
-        status,
-    } = data;
-
+exports.createReview = async ({ projectId, reviewerId, overallRating, codeQualityScore, creativityScore, cleanCodeScore, wouldHire, generalFeedback, suggestions, status }) => {
     const existingProject = await Project.findById(projectId);
     if (!existingProject) {
         throw new AppError("Project not found.", 404, ERROR_CODES.NOT_FOUND);
@@ -85,7 +72,7 @@ exports.createReview = async (data) => {
         wouldHire,
         generalFeedback,
         suggestions,
-        status,
+        status
     });
 
     await recalculateProjectAggregates(projectId);
@@ -124,18 +111,18 @@ exports.getReview = async (reviewId) => {
     return review;
 };
 
-exports.updateReview = async (reviewId, data) => {
+exports.updateReview = async (reviewId, { overallRating, codeQualityScore, creativityScore, cleanCodeScore, wouldHire, generalFeedback, suggestions, status}) => {
     const review = await Review.findByIdAndUpdate(
         reviewId,
         {
-            overallRating: data.overallRating,
-            codeQualityScore: data.codeQualityScore,
-            creativityScore: data.creativityScore,
-            cleanCodeScore: data.cleanCodeScore,
-            wouldHire: data.wouldHire,
-            generalFeedback: data.generalFeedback,
-            suggestions: data.suggestions,
-            status: data.status,
+            overallRating,
+            codeQualityScore,
+            creativityScore,
+            cleanCodeScore,
+            wouldHire,
+            generalFeedback,
+            suggestions,
+            status
         },
         { returnDocument: "after", runValidators: true }
     )

@@ -4,9 +4,7 @@ const certificationLogger = require("../loggers/certificationLogger");
 const AppError = require("../utils/AppError");
 const ERROR_CODES = require("../utils/errorCodes");
 
-exports.apply = async (data) => {
-  const { userId, cvUrl, experience, motivation, techExpertise } = data;
-
+exports.apply = async ({ userId, cvUrl, experience, motivation, techExpertise }) => {
   const existingUser = await User.findById(userId);
   if (!existingUser) {
     throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);

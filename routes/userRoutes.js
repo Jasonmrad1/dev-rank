@@ -21,19 +21,19 @@ router.put("/:id", validateUpdateUser, userController.updateUser);
 // DELETE /api/users/:id - Delete user
 router.delete("/:id", userController.deleteUser);
 
-// POST /api/users/:id/skills - Add skills to user (body: { skills: [...] })
+// POST /api/users/:id/skills - Add skills to user
 router.post("/:id/skills", validateAddSkills, userController.addSkill);
 
 // DELETE /api/users/:id/skills/:skill - Remove a single skill by ID or name
 router.delete("/:id/skills/:skill", userController.removeSkill);
 
-// DELETE /api/users/:id/skills - Remove multiple skills (body: { skills: [...] })
+// DELETE /api/users/:id/skills - Remove multiple skills
 router.delete("/:id/skills", validateRemoveSkills, userController.removeSkills);
 
-// POST /api/users/:id/badges - Award a badge to user (body: { badgeId })
+// POST /api/users/:id/badges - Award a badge to user
 router.post("/:id/badges", validateAwardBadge, userController.awardBadge);
 
-// POST /api/users/:id/badges/name - Award a badge to user by name (body: { badgeName })
+// POST /api/users/:id/badges/name - Award a badge to user by name
 router.post("/:id/badges/name", validateAwardBadgeByName, userController.awardBadgeByName);
 
 // DELETE /api/users/:id/badges/:badgeId - Remove a badge from user by ID
@@ -42,10 +42,10 @@ router.delete("/:id/badges/:badgeId", userController.removeBadge);
 // DELETE /api/users/:id/badges/name/:badgeName - Remove a badge from user by name
 router.delete("/:id/badges/name/:badgeName", userController.removeBadgeByName);
 
-// POST /api/users/follow/:targetId - Follow a user (body: { userId })
+// POST /api/users/follow/:targetId - Follow a user
 router.post("/follow/:targetId", validateFollowRequest, validateFollowTarget, userController.followUser);
 
-// POST /api/users/unfollow/:targetId - Unfollow a user (body: { userId })
+// POST /api/users/unfollow/:targetId - Unfollow a user
 router.post("/unfollow/:targetId", validateFollowRequest, validateFollowTarget, userController.unfollowUser);
 
 // GET /api/users/:userId/followers - Get followers

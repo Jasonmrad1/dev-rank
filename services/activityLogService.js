@@ -40,7 +40,6 @@ exports.getLogsByUser = async (userId) => {
         where: { userId },
         order: [["timestamp", "DESC"]],
     });
-
 };
 
 exports.getLogsByEntity = async (entity, entityId) => {
@@ -64,7 +63,6 @@ exports.deleteLogs = async () => {
     });
 
     return { message: "All activity logs have been deleted successfully." }
-
 };
 
 

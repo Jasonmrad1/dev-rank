@@ -33,9 +33,7 @@ const recalculateUserProfileScore = async (userId) => {
 
 exports.recalculateUserProfileScore = recalculateUserProfileScore;
 
-exports.createProject = async (data) => {
-    const { userId, title, description, repoUrl, liveUrl, techStack, status } = data;
-
+exports.createProject = async ({ userId, title, description, repoUrl, liveUrl, techStack, status }) => {
     const ownerUser = await User.findById(userId);
     if (!ownerUser) {
         throw new AppError("User not found.", 404, ERROR_CODES.NOT_FOUND);
@@ -96,16 +94,16 @@ exports.getProject = async (projectId) => {
     return project;
 };
 
-exports.updateProject = async (projectId, data) => {
+exports.updateProject = async (projectId, { title, description, repoUrl, liveUrl, techStack, status }) => {
     const project = await Project.findByIdAndUpdate(
         projectId,
         {
-            title: data.title,
-            description: data.description,
-            repoUrl: data.repoUrl,
-            liveUrl: data.liveUrl,
-            techStack: data.techStack,
-            status: data.status,
+            title,
+            description,
+            repoUrl,
+            liveUrl,
+            techStack,
+            status,
         },
         { returnDocument: "after", runValidators: true }
     ).populate("user", "name email role githubUrl");
